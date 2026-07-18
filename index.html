@@ -167,7 +167,7 @@ button:hover {
 
 <select id="logLevelSelect">
 
-<option value="panic">
+<option value="panic" selected>
 panic
 </option>
 
@@ -241,6 +241,7 @@ Remote Rule-Set URL:
 
 <input
     id="remoteUrl"
+    type="url"
     value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs"
 >
 
@@ -261,27 +262,26 @@ Remote Rule-Set используется как основной источни�
 
 <br><br>
 
-При первом запуске sing-box пытается скачать
-<b>domains.srs</b> и сохранить его в кеш.
+При включённом cache_file удалённый Rule-Set
+кешируется sing-box.
 
 <br>
 
-При последующих запусках sing-box проверяет наличие
-обновления согласно выбранному интервалу.
+При последующих запусках сохранённый кеш позволяет
+использовать ранее загруженный Rule-Set.
 
 <br>
 
-Если обновление недоступно, ранее сохранённая версия
-Remote Rule-Set может использоваться из кеша.
+Локальный domains.srs в конфигурацию не добавляется.
 
 </div>
 
 
 <div class="note note-warn">
 
-Локальный domains.srs намеренно не добавляется в конфигурацию.
-Это предотвращает ошибку импорта при отсутствии файла
-в каталоге приложения Sing-box.
+Не добавляйте путь к локальному domains.srs:
+если файла нет в каталоге приложения, sing-box завершит
+инициализацию с ошибкой "no such file or directory".
 
 </div>
 
@@ -336,13 +336,9 @@ DNS для Direct:
 
 <h2>Маршрутизация в Redirect DNS</h2>
 
-
 <label for="customDomains">
-
 Свои домены для Redirect:
-
 </label>
-
 
 <textarea
     id="customDomains"
@@ -354,11 +350,8 @@ discord.com"
 
 
 <label for="customPackages">
-
 Android-приложения для Redirect:
-
 </label>
-
 
 <textarea
     id="customPackages"
@@ -367,7 +360,6 @@ Android-приложения для Redirect:
 com.anthropic.claude
 com.twitter.android"
 ></textarea>
-
 
 </div>
 
@@ -383,11 +375,8 @@ com.twitter.android"
 
 
 <label for="excludeDomains">
-
 Домены → Direct DNS:
-
 </label>
-
 
 <textarea
     id="excludeDomains"
@@ -399,18 +388,15 @@ gosuslugi.ru"
 
 <div class="note">
 
-Это изменяет только DNS-сервер.
+Это изменяет DNS-сервер.
 Трафик домена не исключается из VPN автоматически.
 
 </div>
 
 
 <label for="excludePackages">
-
 Android-приложения → обход TUN:
-
 </label>
-
 
 <textarea
     id="excludePackages"
@@ -435,7 +421,7 @@ com.mirpay"
 <!-- GENERATE -->
 <!-- ========================================================= -->
 
-<button onclick="generateConfig()">
+<button id="generateButton">
 
 Скачать конфигурацию Sing-Box (.json)
 
@@ -446,9 +432,7 @@ com.mirpay"
     id="status"
     class="status"
 >
-
 Готово к генерации.
-
 </div>
 
 </div>
@@ -459,7 +443,7 @@ com.mirpay"
 
 
 /* ============================================================
-   REDIRECT DNS
+   DNS DATABASE
 ============================================================ */
 
 
@@ -496,12 +480,6 @@ const REDIRECT_DNS = [
     }
 
 ];
-
-
-
-/* ============================================================
-   DIRECT DNS
-============================================================ */
 
 
 const DIRECT_DNS = [
@@ -626,11 +604,138 @@ const DIRECT_DNS = [
 
 
 /* ============================================================
+   PARSE DoH URL
+============================================================ */
+
+
+/*
+ * Преобразует:
+ *
+ * https://dns.alidns.com/dns-query
+ *
+ * в:
+ *
+ * {
+ *     server: "dns.alidns.com",
+ *     server_port: 443,
+ *     path: "/dns-query"
+ * }
+ *
+ * Для:
+ *
+ * https://dns.geohide.ru:444/dns-query
+ *
+ * результат:
+ *
+ * {
+ *     server: "dns.geohide.ru",
+ *     server_port: 444,
+ *     path: "/dns-query"
+ * }
+ */
+
+
+function parseDnsUrl(url) {
+
+    const value =
+        String(url || "").trim();
+
+
+    if (!value) {
+
+        throw new Error(
+            "DNS URL не указан."
+        );
+
+    }
+
+
+    let parsed;
+
+
+    try {
+
+        parsed =
+            new URL(value);
+
+    } catch (error) {
+
+        throw new Error(
+            `Некорректный DNS URL: ${value}`
+        );
+
+    }
+
+
+    if (
+        parsed.protocol !== "https:"
+    ) {
+
+        throw new Error(
+            `DNS-сервер должен использовать HTTPS: ${value}`
+        );
+
+    }
+
+
+    const server =
+        parsed.hostname;
+
+
+    if (!server) {
+
+        throw new Error(
+            `Не удалось определить hostname DNS-сервера: ${value}`
+        );
+
+    }
+
+
+    const serverPort =
+        parsed.port
+            ? Number(parsed.port)
+            : 443;
+
+
+    if (
+        !Number.isInteger(serverPort) ||
+        serverPort < 1 ||
+        serverPort > 65535
+    ) {
+
+        throw new Error(
+            `Некорректный порт DNS-сервера: ${value}`
+        );
+
+    }
+
+
+    const path =
+        parsed.pathname || "/dns-query";
+
+
+    return {
+
+        server,
+        server_port:
+            serverPort,
+        path
+
+    };
+
+}
+
+
+
+/* ============================================================
    SELECT INITIALIZATION
 ============================================================ */
 
 
-function fillSelect(id, list) {
+function fillSelect(
+    id,
+    list
+) {
 
     const select =
         document.getElementById(id);
@@ -640,7 +745,9 @@ function fillSelect(id, list) {
         (dns, index) => {
 
             const option =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
 
             option.value =
@@ -651,7 +758,9 @@ function fillSelect(id, list) {
                 dns.name;
 
 
-            if (index === 0) {
+            if (
+                index === 0
+            ) {
 
                 option.selected =
                     true;
@@ -728,12 +837,11 @@ function parseInput(id) {
 
 
 /* ============================================================
-   CONFIG GENERATOR
+   GENERATE CONFIG
 ============================================================ */
 
 
 function generateConfig() {
-
 
     const status =
         document.getElementById(
@@ -741,638 +849,718 @@ function generateConfig() {
         );
 
 
-    const remoteUrl =
-        document
-            .getElementById(
-                "remoteUrl"
-            )
-            .value
-            .trim();
-
-
-    const cachePath =
-        document
-            .getElementById(
-                "cachePath"
-            )
-            .value
-            .trim();
-
-
-    const updateInterval =
-        document
-            .getElementById(
-                "updateInterval"
-            )
-            .value;
-
-
-    const redirectDns =
-        document
-            .getElementById(
-                "redirectSelect"
-            )
-            .value;
-
-
-    const directDns =
-        document
-            .getElementById(
-                "directSelect"
-            )
-            .value;
-
-
-
-    /* --------------------------------------------------------
-       VALIDATION
-    -------------------------------------------------------- */
-
-
-    if (
-        !remoteUrl ||
-        !cachePath
-    ) {
-
-        status.textContent =
-            "Ошибка: необходимо указать Remote URL и Cache path.";
-
-        return;
-
-    }
-
-
-
-    /* --------------------------------------------------------
-       INPUTS
-    -------------------------------------------------------- */
-
-
-    const customDomains =
-        parseInput(
-            "customDomains"
-        );
-
-
-    const customPackages =
-        parseInput(
-            "customPackages"
-        );
-
-
-    const excludeDomains =
-        parseInput(
-            "excludeDomains"
-        );
-
-
-    const excludePackages =
-        parseInput(
-            "excludePackages"
-        );
-
-
-
-    /* --------------------------------------------------------
-       TUN INBOUND
-    -------------------------------------------------------- */
-
-
-    const tunInbound = {
-
-        type:
-            "tun",
-
-        tag:
-            "tun-in",
-
-        interface_name:
-            "tun0",
-
-        address:
-            [
-                "172.19.0.1/30"
-            ],
-
-        auto_route:
-            true,
-
-        strict_route:
-            true,
-
-        stack:
-            "gvisor",
-
-        mtu:
-            1400
-
-    };
-
-
-
-    /* --------------------------------------------------------
-       EXCLUDE ANDROID PACKAGES
-    -------------------------------------------------------- */
-
-
-    if (
-        excludePackages.length > 0
-    ) {
-
-        tunInbound.exclude_package =
-            excludePackages;
-
-    }
-
-
-
-    /* --------------------------------------------------------
-       MAIN CONFIG
-    -------------------------------------------------------- */
-
-
-    const config = {
+    try {
 
 
         /* ====================================================
-           LOG
+           BASIC SETTINGS
         ==================================================== */
 
 
-        log: {
+        const remoteUrl =
+            document
+                .getElementById(
+                    "remoteUrl"
+                )
+                .value
+                .trim();
 
-            level:
-                document
-                    .getElementById(
-                        "logLevelSelect"
-                    )
-                    .value,
 
-            timestamp:
-                true
+        const cachePath =
+            document
+                .getElementById(
+                    "cachePath"
+                )
+                .value
+                .trim();
 
-        },
+
+        const updateInterval =
+            document
+                .getElementById(
+                    "updateInterval"
+                )
+                .value;
+
+
+        const redirectDnsUrl =
+            document
+                .getElementById(
+                    "redirectSelect"
+                )
+                .value;
+
+
+        const directDnsUrl =
+            document
+                .getElementById(
+                    "directSelect"
+                )
+                .value;
 
 
 
         /* ====================================================
-           CACHE
+           VALIDATION
         ==================================================== */
 
 
-        experimental: {
+        if (
+            !remoteUrl
+        ) {
 
-            cache_file: {
+            throw new Error(
+                "Remote Rule-Set URL не указан."
+            );
 
-                enabled:
+        }
+
+
+        if (
+            !cachePath
+        ) {
+
+            throw new Error(
+                "Путь к cache.db не указан."
+            );
+
+        }
+
+
+
+        /* ====================================================
+           PARSE DNS URLs
+        ==================================================== */
+
+
+        const redirectDns =
+            parseDnsUrl(
+                redirectDnsUrl
+            );
+
+
+        const directDns =
+            parseDnsUrl(
+                directDnsUrl
+            );
+
+
+
+        /* ====================================================
+           USER INPUT
+        ==================================================== */
+
+
+        const customDomains =
+            parseInput(
+                "customDomains"
+            );
+
+
+        const customPackages =
+            parseInput(
+                "customPackages"
+            );
+
+
+        const excludeDomains =
+            parseInput(
+                "excludeDomains"
+            );
+
+
+        const excludePackages =
+            parseInput(
+                "excludePackages"
+            );
+
+
+
+        /* ====================================================
+           TUN INBOUND
+        ==================================================== */
+
+
+        const tunInbound = {
+
+            type:
+                "tun",
+
+            tag:
+                "tun-in",
+
+            interface_name:
+                "tun0",
+
+            address:
+                [
+                    "172.19.0.1/30"
+                ],
+
+            auto_route:
+                true,
+
+            strict_route:
+                true,
+
+            stack:
+                "gvisor",
+
+            mtu:
+                1400
+
+        };
+
+
+
+        /* ====================================================
+           EXCLUDE PACKAGES FROM TUN
+        ==================================================== */
+
+
+        if (
+            excludePackages.length > 0
+        ) {
+
+            tunInbound.exclude_package =
+                excludePackages;
+
+        }
+
+
+
+        /* ====================================================
+           MAIN CONFIG
+        ==================================================== */
+
+
+        const config = {
+
+
+            /* =================================================
+               LOG
+            ================================================= */
+
+
+            log: {
+
+                level:
+                    document
+                        .getElementById(
+                            "logLevelSelect"
+                        )
+                        .value,
+
+                timestamp:
+                    true
+
+            },
+
+
+
+            /* =================================================
+               RULE-SET CACHE
+            ================================================= */
+
+
+            experimental: {
+
+                cache_file: {
+
+                    enabled:
+                        true,
+
+                    path:
+                        cachePath
+
+                }
+
+            },
+
+
+
+            /* =================================================
+               DNS
+            ================================================= */
+
+
+            dns: {
+
+                servers: [
+
+
+                    /* -----------------------------------------
+                       Bootstrap DNS
+
+                       Используется для разрешения DNS-серверов
+                       по доменным именам.
+                    ----------------------------------------- */
+
+
+                    {
+
+                        type:
+                            "udp",
+
+                        tag:
+                            "bootstrap",
+
+                        server:
+                            "8.8.8.8"
+
+                    },
+
+
+                    /* -----------------------------------------
+                       Redirect DoH
+                    ----------------------------------------- */
+
+
+                    {
+
+                        type:
+                            "https",
+
+                        tag:
+                            "redirect-dns",
+
+                        server:
+                            redirectDns.server,
+
+                        server_port:
+                            redirectDns.server_port,
+
+                        path:
+                            redirectDns.path,
+
+                        domain_resolver:
+                            "bootstrap"
+
+                    },
+
+
+                    /* -----------------------------------------
+                       Direct DoH
+                    ----------------------------------------- */
+
+
+                    {
+
+                        type:
+                            "https",
+
+                        tag:
+                            "direct-dns",
+
+                        server:
+                            directDns.server,
+
+                        server_port:
+                            directDns.server_port,
+
+                        path:
+                            directDns.path,
+
+                        domain_resolver:
+                            "bootstrap"
+
+                    }
+
+                ],
+
+
+                rules: [],
+
+
+                strategy:
+                    "prefer_ipv4",
+
+
+                independent_cache:
                     true,
 
-                path:
-                    cachePath
 
-            }
+                final:
+                    "direct-dns"
 
-        },
-
+            },
 
 
-        /* ====================================================
-           DNS
-        ==================================================== */
+
+            /* =================================================
+               INBOUND
+            ================================================= */
 
 
-        dns: {
+            inbounds: [
+
+                tunInbound
+
+            ],
 
 
-            servers: [
 
-                /* Bootstrap DNS */
-
-                {
-
-                    type:
-                        "udp",
-
-                    tag:
-                        "bootstrap",
-
-                    server:
-                        "8.8.8.8"
-
-                },
+            /* =================================================
+               OUTBOUND
+            ================================================= */
 
 
-                /* Redirect DNS */
+            outbounds: [
 
                 {
 
                     type:
-                        "https",
+                        "direct",
 
                     tag:
-                        "redirect-dns",
-
-                    server:
-                        redirectDns,
-
-                    domain_resolver:
-                        "bootstrap"
-
-                },
-
-
-                /* Direct DNS */
-
-                {
-
-                    type:
-                        "https",
-
-                    tag:
-                        "direct-dns",
-
-                    server:
-                        directDns,
-
-                    domain_resolver:
-                        "bootstrap"
+                        "direct"
 
                 }
 
             ],
 
 
-            rules: [],
+
+            /* =================================================
+               ROUTE
+            ================================================= */
 
 
-            strategy:
-                "prefer_ipv4",
+            route: {
 
 
-            independent_cache:
-                true,
+                /* ---------------------------------------------
+                   REMOTE RULE-SET
+
+                   Сохраняется в cache_file при включённом
+                   experimental.cache_file.
+                --------------------------------------------- */
 
 
-            final:
-                "direct-dns"
+                rule_set: [
 
-        },
+                    {
+
+                        type:
+                            "remote",
+
+                        tag:
+                            "domains",
+
+                        format:
+                            "binary",
+
+                        url:
+                            remoteUrl,
+
+                        update_interval:
+                            updateInterval,
+
+                        download_detour:
+                            "direct"
+
+                    }
+
+                ],
 
 
 
-        /* ====================================================
-           INBOUND
-        ==================================================== */
+                /* ---------------------------------------------
+                   ROUTING RULES
+                --------------------------------------------- */
 
 
-        inbounds: [
-
-            tunInbound
-
-        ],
+                rules: [
 
 
+                    /* Traffic sniffing */
 
-        /* ====================================================
-           OUTBOUND
-        ==================================================== */
+                    {
+
+                        action:
+                            "sniff"
+
+                    },
 
 
-        outbounds: [
+                    /* DNS hijacking */
 
-            {
+                    {
 
-                type:
-                    "direct",
+                        protocol:
+                            "dns",
 
-                tag:
+                        action:
+                            "hijack-dns"
+
+                    },
+
+
+                    /* Private IP → Direct */
+
+                    {
+
+                        ip_is_private:
+                            true,
+
+                        outbound:
+                            "direct"
+
+                    }
+
+                ],
+
+
+                default_domain_resolver:
+                    "bootstrap",
+
+
+                auto_detect_interface:
+                    true,
+
+
+                final:
                     "direct"
 
             }
 
-        ],
+        };
 
 
 
         /* ====================================================
-           ROUTING
+           EXCLUDED DOMAINS → DIRECT DNS
         ==================================================== */
 
 
-        route: {
+        if (
+            excludeDomains.length > 0
+        ) {
 
+            config.dns.rules.push({
 
-            /* ------------------------------------------------
-               REMOTE RULE-SET
+                domain_suffix:
+                    excludeDomains,
 
-               Основной Rule-Set.
+                server:
+                    "direct-dns"
 
-               При загрузке используется direct.
-
-               Cache включён через experimental.cache_file.
-            ------------------------------------------------ */
-
-
-            rule_set: [
-
-                {
-
-                    type:
-                        "remote",
-
-                    tag:
-                        "domains",
-
-                    format:
-                        "binary",
-
-                    url:
-                        remoteUrl,
-
-                    update_interval:
-                        updateInterval,
-
-                    download_detour:
-                        "direct"
-
-                }
-
-            ],
-
-
-
-            /* ------------------------------------------------
-               ROUTING RULES
-            ------------------------------------------------ */
-
-
-            rules: [
-
-
-                /* Traffic sniffing */
-
-                {
-
-                    action:
-                        "sniff"
-
-                },
-
-
-                /* DNS hijacking */
-
-                {
-
-                    protocol:
-                        "dns",
-
-                    action:
-                        "hijack-dns"
-
-                },
-
-
-                /* Private IP addresses */
-
-                {
-
-                    ip_is_private:
-                        true,
-
-                    outbound:
-                        "direct"
-
-                }
-
-            ],
-
-
-
-            /* Resolver for routing */
-
-            default_domain_resolver:
-                "bootstrap",
-
-
-            /* Detect physical interface */
-
-            auto_detect_interface:
-                true,
-
-
-            /* Default outbound */
-
-            final:
-                "direct"
+            });
 
         }
 
-    };
+
+
+        /* ====================================================
+           SELECTED APPS → REDIRECT DNS
+        ==================================================== */
+
+
+        if (
+            customPackages.length > 0
+        ) {
+
+            config.dns.rules.push({
+
+                package_name:
+                    customPackages,
+
+                server:
+                    "redirect-dns"
+
+            });
+
+        }
 
 
 
-    /* ========================================================
-       EXCLUDED DOMAINS → DIRECT DNS
-    ======================================================== */
+        /* ====================================================
+           SELECTED DOMAINS → REDIRECT DNS
+        ==================================================== */
 
 
-    if (
-        excludeDomains.length > 0
-    ) {
+        if (
+            customDomains.length > 0
+        ) {
+
+            config.dns.rules.push({
+
+                domain_suffix:
+                    customDomains,
+
+                server:
+                    "redirect-dns"
+
+            });
+
+        }
+
+
+
+        /* ====================================================
+           REMOTE RULE-SET → REDIRECT DNS
+        ==================================================== */
+
 
         config.dns.rules.push({
 
-            domain_suffix:
-                excludeDomains,
-
-            server:
-                "direct-dns"
-
-        });
-
-    }
-
-
-
-    /* ========================================================
-       SELECTED APPS → REDIRECT DNS
-    ======================================================== */
-
-
-    if (
-        customPackages.length > 0
-    ) {
-
-        config.dns.rules.push({
-
-            package_name:
-                customPackages,
-
-            server:
-                "redirect-dns"
-
-        });
-
-    }
-
-
-
-    /* ========================================================
-       SELECTED DOMAINS → REDIRECT DNS
-    ======================================================== */
-
-
-    if (
-        customDomains.length > 0
-    ) {
-
-        config.dns.rules.push({
-
-            domain_suffix:
-                customDomains,
+            rule_set:
+                "domains",
 
             server:
                 "redirect-dns"
 
         });
 
-    }
 
 
-
-    /* ========================================================
-       REMOTE RULE-SET → REDIRECT DNS
-    ======================================================== */
-
-
-    config.dns.rules.push({
-
-        rule_set:
-            "domains",
-
-        server:
-            "redirect-dns"
-
-    });
+        /* ====================================================
+           SERIALIZE
+        ==================================================== */
 
 
-
-    /* ========================================================
-       SERIALIZE JSON
-    ======================================================== */
-
-
-    const json =
-        JSON.stringify(
-            config,
-            null,
-            2
-        );
-
-
-
-    /* ========================================================
-       DOWNLOAD
-    ======================================================== */
-
-
-    const blob =
-        new Blob(
-
-            [
-                json
-            ],
-
-            {
-                type:
-                    "application/json"
-            }
-
-        );
-
-
-    const url =
-        URL.createObjectURL(
-            blob
-        );
-
-
-    const link =
-        document.createElement(
-            "a"
-        );
-
-
-    link.href =
-        url;
-
-
-    link.download =
-        "singbox_dns_config.json";
-
-
-    document.body.appendChild(
-        link
-    );
-
-
-    link.click();
-
-
-    link.remove();
-
-
-
-    setTimeout(
-
-        () => {
-
-            URL.revokeObjectURL(
-                url
+        const json =
+            JSON.stringify(
+                config,
+                null,
+                2
             );
 
-        },
-
-        1000
-
-    );
 
 
+        /* ====================================================
+           DOWNLOAD FILE
+        ==================================================== */
 
-    /* ========================================================
-       STATUS
-    ======================================================== */
+
+        const blob =
+            new Blob(
+
+                [
+                    json
+                ],
+
+                {
+                    type:
+                        "application/json"
+                }
+
+            );
 
 
-    status.textContent =
+        const url =
+            URL.createObjectURL(
+                blob
+            );
 
-        "Конфигурация успешно создана.\n\n" +
 
-        "Remote Rule-Set:\n" +
+        const link =
+            document.createElement(
+                "a"
+            );
 
-        remoteUrl +
 
-        "\n\n" +
+        link.href =
+            url;
 
-        "Update interval:\n" +
 
-        updateInterval +
+        link.download =
+            "singbox_dns_config.json";
 
-        "\n\n" +
 
-        "Cache:\n" +
+        document.body.appendChild(
+            link
+        );
 
-        cachePath +
 
-        "\n\n" +
+        link.click();
 
-        "Локальный domains.srs НЕ требуется.\n\n" +
 
-        "Конфигурация использует только Remote Rule-Set " +
+        link.remove();
 
-        "с включённым cache_file.";
+
+        setTimeout(
+
+            () => {
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+
+            1000
+
+        );
+
+
+
+        /* ====================================================
+           STATUS
+        ==================================================== */
+
+
+        status.textContent =
+
+            "Конфигурация успешно создана.\n\n" +
+
+            "Redirect DNS:\n" +
+
+            `${redirectDns.server}:${redirectDns.server_port}${redirectDns.path}` +
+
+            "\n\n" +
+
+            "Direct DNS:\n" +
+
+            `${directDns.server}:${directDns.server_port}${directDns.path}` +
+
+            "\n\n" +
+
+            "Remote Rule-Set:\n" +
+
+            remoteUrl +
+
+            "\n\n" +
+
+            "Update interval:\n" +
+
+            updateInterval +
+
+            "\n\n" +
+
+            "Cache:\n" +
+
+            cachePath;
+
+
+    } catch (error) {
+
+
+        status.textContent =
+
+            "Ошибка генерации конфигурации:\n\n" +
+
+            error.message;
+
+    }
 
 }
+
+
+
+/* ============================================================
+   BUTTON
+============================================================ */
+
+
+document
+    .getElementById(
+        "generateButton"
+    )
+    .addEventListener(
+        "click",
+        generateConfig
+    );
 
 
 </script>
