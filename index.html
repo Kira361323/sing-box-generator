@@ -14,6 +14,7 @@
             --border: #45475a;
             --hover: #b4befe;
             --warn: #f38ba8;
+            --success: #a6e3a1;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -73,29 +74,23 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
-        .buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
         button {
-            flex: 1;
-            min-width: 200px;
-            background-color: var(--accent);
+            width: 100%;
+            background-color: var(--success);
             color: #11111b;
             border: none;
-            padding: 12px 20px;
-            font-size: 1em;
+            padding: 14px 20px;
+            font-size: 1.1em;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s, transform 0.1s;
         }
         button:hover {
-            background-color: var(--hover);
+            background-color: #94e28f;
         }
         button:active {
-            transform: scale(0.98);
+            transform: scale(0.99);
         }
         .note {
             font-size: 0.8em;
@@ -114,63 +109,69 @@
 <body>
 
 <div class="container">
-    <h1>Sing-Box DNS Configurator</h1>
+    <h1>Sing-Box DNS Configurator (v2.2)</h1>
     
     <div class="section">
-        <h2>Общие настройки</h2>
-        <label for="logLevelSelect">Уровень логирования (Log Level):</label>
-        <select id="logLevelSelect">
-            <option value="panic">panic (По умолчанию, минимальный лог для экономии ресурсов)</option>
-            <option value="fatal">fatal</option>
-            <option value="error">error</option>
-            <option value="warn">warn</option>
-            <option value="info">info</option>
-            <option value="debug">debug (Требуется для теста скорости в Bench-профиле)</option>
-            <option value="trace">trace (Максимальная детализация для дебага)</option>
-        </select>
+        <h2>Системные параметры</h2>
+        <div class="grid">
+            <div>
+                <label for="logLevelSelect">Уровень логирования:</label>
+                <select id="logLevelSelect">
+                    <option value="panic">panic (Минимальный лог / экономия ресурсов)</option>
+                    <option value="fatal">fatal</option>
+                    <option value="error">error</option>
+                    <option value="warn">warn</option>
+                    <option value="info">info</option>
+                    <option value="debug">debug (Для глубокого дебага)</option>
+                    <option value="trace">trace</option>
+                </select>
+            </div>
+            <div>
+                <label for="ruleSetSource">Источник базы (domains.srs):</label>
+                <select id="ruleSetSource">
+                    <option value="remote">Remote (Скачивать с GitHub при старте)</option>
+                    <option value="local">Local (Локальный файл в папке профиля)</option>
+                </select>
+            </div>
+        </div>
+        <div class="note">Если провайдер блокирует скачивание с GitHub при запуске туннеля, выбери <b>Local</b> и положи скачанный файл `domains.srs` в папку приложения Sing-Box.</div>
+    </div>
+
+    <div class="section">
+        <h2>Выбор DNS-серверов</h2>
+        <div class="grid">
+            <div>
+                <label for="redirectSelect">DNS для Redirect (Заблокированные / Свои):</label>
+                <select id="redirectSelect"></select>
+            </div>
+            <div>
+                <label for="directSelect">DNS для Direct (Обычный трафик / Исключения):</label>
+                <select id="directSelect"></select>
+            </div>
+        </div>
     </div>
 
     <div class="section">
         <h2>Маршрутизация (Направление в Redirect DNS)</h2>
         <label for="customDomains">Свои домены для Redirect (через запятую или с новой строки):</label>
         <textarea id="customDomains" rows="2" placeholder="openai.com, claude.ai, discord.com"></textarea>
-        <div class="note">Эти домены будут принудительно направляться через Redirect DNS.</div>
-
+        
         <label for="customPackages">Свои Android-приложения для Redirect (имена пакетов):</label>
         <textarea id="customPackages" rows="2" placeholder="com.openai.chatgpt, com.twitter.android"></textarea>
-        <div class="note">Трафик этих приложений будет полностью уходить на Redirect DNS.</div>
     </div>
 
     <div class="section">
-        <h2>Исключения (Bypass & Direct)</h2>
-        <label for="excludeDomains">Исключить домены из Redirect (через запятую или с новой строки):</label>
+        <h2>Исключения (Bypass -> Direct DNS / Обход туннеля)</h2>
+        <label for="excludeDomains">Исключить домены (Направить строго в Direct DNS):</label>
         <textarea id="excludeDomains" rows="2" placeholder="sberbank.ru, gosuslugi.ru, local.dev"></textarea>
-        <div class="note note-warn">Имеют высший приоритет. Пойдут через Direct DNS, даже если присутствуют в основной базе.</div>
+        <div class="note note-warn">Высший приоритет. Перебивают основную базу доменов.</div>
 
-        <label for="excludePackages">Исключить Android-приложения из туннеля (имена пакетов):</label>
+        <label for="excludePackages">Исключить Android-приложения из туннеля (Имена пакетов):</label>
         <textarea id="excludePackages" rows="2" placeholder="ru.sberbankmobile, com.mirpay"></textarea>
-        <div class="note">Трафик указанных приложений пойдет напрямую, минуя виртуальный туннельный интерфейс.</div>
+        <div class="note">Трафик этих приложений пойдет напрямую через физический интерфейс, минуя туннель Sing-Box.</div>
     </div>
 
-    <div class="section">
-        <h2>Настройки Fixed Профиля</h2>
-        <div class="grid">
-            <div>
-                <label for="fixedRedirectSelect">DNS для Redirect:</label>
-                <select id="fixedRedirectSelect"></select>
-            </div>
-            <div>
-                <label for="fixedDirectSelect">DNS для Direct:</label>
-                <select id="fixedDirectSelect"></select>
-            </div>
-        </div>
-    </div>
-
-    <div class="buttons">
-        <button onclick="generateConfig('bench')">1. Скачать Bench (Тест скорости)</button>
-        <button onclick="generateConfig('dynamic')">2. Скачать Dynamic (Автопилот)</button>
-        <button onclick="generateConfig('fixed')">3. Скачать Fixed (Ручной выбор)</button>
-    </div>
+    <button onclick="generateConfig()">Скачать конфигурацию Sing-Box (.json)</button>
 </div>
 
 <script>
@@ -210,7 +211,7 @@
     ];
 
     window.onload = function() {
-        const redirSelect = document.getElementById('fixedRedirectSelect');
+        const redirSelect = document.getElementById('redirectSelect');
         REDIRECT_DNS.forEach(dns => {
             const opt = document.createElement('option');
             opt.value = dns.url;
@@ -218,7 +219,7 @@
             redirSelect.appendChild(opt);
         });
 
-        const dirSelect = document.getElementById('fixedDirectSelect');
+        const dirSelect = document.getElementById('directSelect');
         DIRECT_DNS.forEach(dns => {
             const opt = document.createElement('option');
             opt.value = dns.url;
@@ -233,11 +234,11 @@
         return val.split(/[\n,]/).map(s => s.trim()).filter(s => s.length > 0);
     }
 
-    function generateConfig(type) {
-        let activeLogLevel = document.getElementById('logLevelSelect').value;
-        if (type === 'bench' && activeLogLevel === 'panic') {
-            activeLogLevel = 'debug';
-        }
+    function generateConfig() {
+        const activeLogLevel = document.getElementById('logLevelSelect').value;
+        const ruleSetSource = document.getElementById('ruleSetSource').value;
+        const selectedRedir = document.getElementById('redirectSelect').value;
+        const selectedDir = document.getElementById('directSelect').value;
 
         const customDomains = parseInput('customDomains');
         const customPackages = parseInput('customPackages');
@@ -255,9 +256,24 @@
             "mtu": 1400
         };
 
-        // Добавляем exclude_package только если пользователь реально вписал исключения
         if (excludePackages.length > 0) {
             tunInbound.exclude_package = excludePackages;
+        }
+
+        // Настройка источника rule-set
+        let ruleSetObj = {
+            "tag": "domains",
+            "format": "binary"
+        };
+
+        if (ruleSetSource === 'remote') {
+            ruleSetObj.type = "remote";
+            ruleSetObj.url = "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
+            ruleSetObj.update_interval = "24h";
+            ruleSetObj.download_detour = "direct";
+        } else {
+            ruleSetObj.type = "local";
+            ruleSetObj.path = "domains.srs";
         }
 
         let config = {
@@ -271,27 +287,31 @@
                         "type": "udp",
                         "tag": "bootstrap",
                         "server": "8.8.8.8"
+                    },
+                    {
+                        "type": "https",
+                        "tag": "redirect-dns",
+                        "server": selectedRedir,
+                        "domain_resolver": "bootstrap"
+                    },
+                    {
+                        "type": "https",
+                        "tag": "direct-dns",
+                        "server": selectedDir,
+                        "domain_resolver": "bootstrap"
                     }
                 ],
                 "rules": [],
                 "strategy": "prefer_ipv4",
-                "independent_cache": true
+                "independent_cache": true,
+                "final": "direct-dns"
             },
             "inbounds": [tunInbound],
             "outbounds": [
                 { "type": "direct", "tag": "direct" }
             ],
             "route": {
-                "rule_set": [
-                    {
-                        "type": "remote",
-                        "tag": "domains",
-                        "format": "binary",
-                        "url": "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs",
-                        "update_interval": "24h",
-                        "download_detour": "direct"
-                    }
-                ],
+                "rule_set": [ruleSetObj],
                 "rules": [
                     { "action": "sniff" },
                     { "protocol": "dns", "action": "hijack-dns" },
@@ -303,98 +323,37 @@
             }
         };
 
-        const formatDoh = (url) => ({
-            "type": "https",
-            "server": url,
-            "domain_resolver": "bootstrap"
-        });
-
-        // 1. BENCH
-        if (type === 'bench') {
-            const allOutbounds = [...REDIRECT_DNS, ...DIRECT_DNS].map(d => formatDoh(d.url));
-            config.dns.servers.push({
-                "type": "selector",
-                "tag": "bench-selector",
-                "outbounds": allOutbounds,
-                "strategy": "fastest"
-            });
-            config.dns.rules.push({ "outbound": "any", "server": "bench-selector" });
-            config.dns.final = "bench-selector";
-        } 
-        // 2. DYNAMIC
-        else if (type === 'dynamic') {
-            config.dns.servers.push(
-                {
-                    "type": "selector",
-                    "tag": "redirect-dyn",
-                    "outbounds": REDIRECT_DNS.map(d => formatDoh(d.url)),
-                    "strategy": "fastest"
-                },
-                {
-                    "type": "selector",
-                    "tag": "direct-dyn",
-                    "outbounds": DIRECT_DNS.map(d => formatDoh(d.url)),
-                    "strategy": "fastest"
-                }
-            );
-            config.dns.final = "direct-dyn";
-            applyRoutingRules(config, customDomains, customPackages, excludeDomains, "redirect-dyn", "direct-dyn");
-        } 
-        // 3. FIXED
-        else if (type === 'fixed') {
-            const selectedRedir = document.getElementById('fixedRedirectSelect').value;
-            const selectedDir = document.getElementById('fixedDirectSelect').value;
-            config.dns.servers.push(
-                {
-                    "type": "https",
-                    "tag": "redirect-fix",
-                    "server": selectedRedir,
-                    "domain_resolver": "bootstrap"
-                },
-                {
-                    "type": "https",
-                    "tag": "direct-fix",
-                    "server": selectedDir,
-                    "domain_resolver": "bootstrap"
-                }
-            );
-            config.dns.final = "direct-fix";
-            applyRoutingRules(config, customDomains, customPackages, excludeDomains, "redirect-fix", "direct-fix");
-        }
-
-        downloadJSON(config, `singbox_${type}_profile.json`);
-    }
-
-    function applyRoutingRules(config, domains, packages, excludeDomains, redirectTag, directTag) {
-        // ПРИОРИТЕТ 1: Исключенные домены жестко направляем в Direct DNS
+        // ПРИОРИТЕТ 1: Исключенные домены -> Direct DNS
         if (excludeDomains.length > 0) {
             config.dns.rules.push({
                 "domain_suffix": excludeDomains,
-                "server": directTag
+                "server": "direct-dns"
             });
         }
 
-        // ПРИОРИТЕТ 2: Кастомные приложения пользователя -> Redirect
-        if (packages.length > 0) {
+        // ПРИОРИТЕТ 2: Кастомные приложения -> Redirect DNS
+        if (customPackages.length > 0) {
             config.dns.rules.push({
-                "package_name": packages,
-                "server": redirectTag
+                "package_name": customPackages,
+                "server": "redirect-dns"
             });
         }
 
-        // ПРИОРИТЕТ 3: Кастомные домены пользователя -> Redirect
-        if (domains.length > 0) {
+        // ПРИОРИТЕТ 3: Кастомные домены -> Redirect DNS
+        if (customDomains.length > 0) {
             config.dns.rules.push({
-                "domain_suffix": domains,
-                "server": redirectTag
+                "domain_suffix": customDomains,
+                "server": "redirect-dns"
             });
         }
 
-        // ПРИОРИТЕТ 4: Основная база доменов из репозитория -> Redirect
+        // ПРИОРИТЕТ 4: Основная база доменов -> Redirect DNS
         config.dns.rules.push({
             "rule_set": "domains",
-            "server": redirectTag
+            "server": "redirect-dns"
         });
+
+        downloadJSON(config, `singbox_dns_config.json`);
     }
 
     function downloadJSON(data, filename) {
