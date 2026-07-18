@@ -145,11 +145,11 @@
         <h2>Исключения (Bypass & Direct)</h2>
         <label for="excludeDomains">Исключить домены из Redirect (через запятую или с новой строки):</label>
         <textarea id="excludeDomains" rows="2" placeholder="sberbank.ru, gosuslugi.ru, local.dev"></textarea>
-        <div class="note note-warn">Имеют высший приоритет. Пойдут через Direct DNS, даже если присутствуют в базе domains.</div>
+        <div class="note note-warn">Имеют высший приоритет. Пойдут через Direct DNS, даже если присутствуют в основной базе.</div>
 
         <label for="excludePackages">Исключить Android-приложения из туннеля (имена пакетов):</label>
         <textarea id="excludePackages" rows="2" placeholder="ru.sberbankmobile, com.mirpay"></textarea>
-        <div class="note">Добавятся к базовому исключению com.whatsapp. Трафик пойдет полностью мимо VPN.</div>
+        <div class="note">Трафик указанных приложений пойдет напрямую, минуя виртуальный туннельный интерфейс.</div>
     </div>
 
     <div class="section">
@@ -235,7 +235,6 @@
 
     function generateConfig(type) {
         let activeLogLevel = document.getElementById('logLevelSelect').value;
-        // Защита от ошибки: для теста скорости принудительно ставим debug, если выбран panic
         if (type === 'bench' && activeLogLevel === 'panic') {
             activeLogLevel = 'debug';
         }
@@ -245,8 +244,21 @@
         const excludeDomains = parseInput('excludeDomains');
         const excludePackages = parseInput('excludePackages');
 
-        // Формируем уникальный список исключенных приложений (базовый WhatsApp + выбор пользователя)
-        const mergedExcludedPackages = Array.from(new Set(["com.whatsapp", ...excludePackages]));
+        let tunInbound = {
+            "type": "tun",
+            "tag": "tun-in",
+            "interface_name": "tun0",
+            "address": ["172.19.0.1/30"],
+            "auto_route": true,
+            "strict_route": true,
+            "stack": "gvisor",
+            "mtu": 1400
+        };
+
+        // Добавляем exclude_package только если пользователь реально вписал исключения
+        if (excludePackages.length > 0) {
+            tunInbound.exclude_package = excludePackages;
+        }
 
         let config = {
             "log": {
@@ -265,19 +277,7 @@
                 "strategy": "prefer_ipv4",
                 "independent_cache": true
             },
-            "inbounds": [
-                {
-                    "type": "tun",
-                    "tag": "tun-in",
-                    "interface_name": "tun0",
-                    "address": ["172.19.0.1/30"],
-                    "auto_route": true,
-                    "strict_route": true,
-                    "stack": "gvisor",
-                    "mtu": 1400,
-                    "exclude_package": mergedExcludedPackages
-                }
-            ],
+            "inbounds": [tunInbound],
             "outbounds": [
                 { "type": "direct", "tag": "direct" }
             ],
@@ -285,7 +285,7 @@
                 "rule_set": [
                     {
                         "type": "remote",
-                        "tag": "domains-ruleset",
+                        "tag": "domains",
                         "format": "binary",
                         "url": "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs",
                         "update_interval": "24h",
@@ -392,7 +392,7 @@
 
         // ПРИОРИТЕТ 4: Основная база доменов из репозитория -> Redirect
         config.dns.rules.push({
-            "rule_set": "domains-ruleset",
+            "rule_set": "domains",
             "server": redirectTag
         });
     }
