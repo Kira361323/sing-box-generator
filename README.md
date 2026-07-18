@@ -1,4 +1,4 @@
-# Sing-Box DNS Configurator
+# [Sing-Box DNS Configurator](https://kira361323.github.io/sing-box-generator/)
 
 Инструмент для генерации конфигурационных файлов Sing-Box с поддержкой кастомной маршрутизации и управления логированием.
 
