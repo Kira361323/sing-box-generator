@@ -1,373 +1,1572 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sing-Box DNS Config Generator</title>
-    <style>
-        :root {
-            --bg: #1e1e2e;
-            --surface: #181825;
-            --card: #313244;
-            --text: #cdd6f4;
-            --accent: #89b4fa;
-            --border: #45475a;
-            --hover: #b4befe;
-            --warn: #f38ba8;
-            --success: #a6e3a1;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background-color: var(--surface);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        }
-        h1, h2 {
-            margin-top: 0;
-            color: var(--accent);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-        .section {
-            background-color: var(--card);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-        textarea, select {
-            width: 100%;
-            background-color: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 0.9em;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            resize: vertical;
-        }
-        textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        button {
-            width: 100%;
-            background-color: var(--success);
-            color: #11111b;
-            border: none;
-            padding: 14px 20px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        button:hover {
-            background-color: #94e28f;
-        }
-        button:active {
-            transform: scale(0.99);
-        }
-        .note {
-            font-size: 0.8em;
-            color: #a6adc8;
-            margin-top: -10px;
-            margin-bottom: 15px;
-        }
-        .note-warn {
-            color: var(--warn);
-        }
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sing-Box DNS Configurator</title>
+
+<style>
+:root {
+    --bg: #1e1e2e;
+    --surface: #181825;
+    --card: #313244;
+    --text: #cdd6f4;
+    --accent: #89b4fa;
+    --border: #45475a;
+    --hover: #b4befe;
+    --warn: #f38ba8;
+    --success: #a6e3a1;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+
+    background: var(--surface);
+    padding: 25px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+h1,
+h2 {
+    margin-top: 0;
+    color: var(--accent);
+
+    border-bottom:
+        1px solid var(--border);
+
+    padding-bottom: 10px;
+}
+
+.section {
+    background: var(--card);
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    margin-bottom: 20px;
+
+    border:
+        1px solid var(--border);
+}
+
+label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-weight: 600;
+
+    font-size: 0.9em;
+}
+
+textarea,
+select,
+input {
+    width: 100%;
+
+    background: var(--surface);
+
+    color: var(--text);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 6px;
+
+    padding: 10px;
+
+    font-family: monospace;
+
+    font-size: 0.9em;
+
+    margin-bottom: 15px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+textarea:focus,
+select:focus,
+input:focus {
+    outline: none;
+
+    border-color:
+        var(--accent);
+}
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 15px;
+}
+
+button {
+    width: 100%;
+
+    background:
+        var(--success);
+
+    color:
+        #11111b;
+
+    border: none;
+
+    padding: 14px 20px;
+
+    font-size: 1.1em;
+
+    font-weight: bold;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background:
+        #94e28f;
+}
+
+.note {
+    font-size: 0.8em;
+
+    color:
+        #a6adc8;
+
+    margin-top: -10px;
+
+    margin-bottom: 15px;
+
+    line-height: 1.5;
+}
+
+.note-warn {
+    color:
+        var(--warn);
+}
+
+.status {
+    padding: 10px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 6px;
+
+    margin-top: 10px;
+
+    font-family: monospace;
+
+    font-size: 0.85em;
+
+    white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+
+    .grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+</style>
 </head>
+
+
 <body>
 
 <div class="container">
-    <h1>Sing-Box DNS Configurator (v2.2)</h1>
-    
-    <div class="section">
-        <h2>Системные параметры</h2>
-        <div class="grid">
-            <div>
-                <label for="logLevelSelect">Уровень логирования:</label>
-                <select id="logLevelSelect">
-                    <option value="panic">panic (Минимальный лог / экономия ресурсов)</option>
-                    <option value="fatal">fatal</option>
-                    <option value="error">error</option>
-                    <option value="warn">warn</option>
-                    <option value="info">info</option>
-                    <option value="debug">debug (Для глубокого дебага)</option>
-                    <option value="trace">trace</option>
-                </select>
-            </div>
-            <div>
-                <label for="ruleSetSource">Источник базы (domains.srs):</label>
-                <select id="ruleSetSource">
-                    <option value="remote">Remote (Скачивать с GitHub при старте)</option>
-                    <option value="local">Local (Локальный файл в папке профиля)</option>
-                </select>
-            </div>
-        </div>
-        <div class="note">Если провайдер блокирует скачивание с GitHub при запуске туннеля, выбери <b>Local</b> и положи скачанный файл `domains.srs` в папку приложения Sing-Box.</div>
-    </div>
 
-    <div class="section">
-        <h2>Выбор DNS-серверов</h2>
-        <div class="grid">
-            <div>
-                <label for="redirectSelect">DNS для Redirect (Заблокированные / Свои):</label>
-                <select id="redirectSelect"></select>
-            </div>
-            <div>
-                <label for="directSelect">DNS для Direct (Обычный трафик / Исключения):</label>
-                <select id="directSelect"></select>
-            </div>
-        </div>
-    </div>
+<h1>Sing-Box DNS Configurator</h1>
 
-    <div class="section">
-        <h2>Маршрутизация (Направление в Redirect DNS)</h2>
-        <label for="customDomains">Свои домены для Redirect (через запятую или с новой строки):</label>
-        <textarea id="customDomains" rows="2" placeholder="openai.com, claude.ai, discord.com"></textarea>
-        
-        <label for="customPackages">Свои Android-приложения для Redirect (имена пакетов):</label>
-        <textarea id="customPackages" rows="2" placeholder="com.openai.chatgpt, com.twitter.android"></textarea>
-    </div>
 
-    <div class="section">
-        <h2>Исключения (Bypass -> Direct DNS / Обход туннеля)</h2>
-        <label for="excludeDomains">Исключить домены (Направить строго в Direct DNS):</label>
-        <textarea id="excludeDomains" rows="2" placeholder="sberbank.ru, gosuslugi.ru, local.dev"></textarea>
-        <div class="note note-warn">Высший приоритет. Перебивают основную базу доменов.</div>
+<!-- ========================================================= -->
+<!-- SYSTEM -->
+<!-- ========================================================= -->
 
-        <label for="excludePackages">Исключить Android-приложения из туннеля (Имена пакетов):</label>
-        <textarea id="excludePackages" rows="2" placeholder="ru.sberbankmobile, com.mirpay"></textarea>
-        <div class="note">Трафик этих приложений пойдет напрямую через физический интерфейс, минуя туннель Sing-Box.</div>
-    </div>
+<div class="section">
 
-    <button onclick="generateConfig()">Скачать конфигурацию Sing-Box (.json)</button>
+<h2>Системные параметры</h2>
+
+
+<div class="grid">
+
+<div>
+
+<label for="logLevelSelect">
+Уровень логирования:
+</label>
+
+<select id="logLevelSelect">
+
+<option value="panic">
+panic
+</option>
+
+<option value="fatal">
+fatal
+</option>
+
+<option value="error">
+error
+</option>
+
+<option value="warn">
+warn
+</option>
+
+<option value="info">
+info
+</option>
+
+<option value="debug">
+debug
+</option>
+
+<option value="trace">
+trace
+</option>
+
+</select>
+
 </div>
 
+
+<div>
+
+<label for="updateInterval">
+Интервал обновления Remote Rule-Set:
+</label>
+
+<select id="updateInterval">
+
+<option value="1h">
+1 час
+</option>
+
+<option value="6h">
+6 часов
+</option>
+
+<option value="12h">
+12 часов
+</option>
+
+<option value="24h" selected>
+24 часа
+</option>
+
+<option value="168h">
+7 дней
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<label for="remoteUrl">
+Remote Rule-Set URL:
+</label>
+
+<input
+    id="remoteUrl"
+    value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs"
+>
+
+
+<label for="cachePath">
+Файл кеша sing-box:
+</label>
+
+<input
+    id="cachePath"
+    value="cache.db"
+>
+
+
+<label for="localPath">
+Локальный резервный Rule-Set:
+</label>
+
+<input
+    id="localPath"
+    value="domains.srs"
+>
+
+
+<div class="note">
+
+<b>Режим Remote + Cache:</b>
+
+<br>
+
+1. При первом запуске sing-box загружает Remote Rule-Set.
+
+<br>
+
+2. Загруженный Rule-Set сохраняется в cache.
+
+<br>
+
+3. При последующих запусках sing-box проверяет обновление
+согласно выбранному интервалу.
+
+<br>
+
+4. Если обновление недоступно, используется сохранённая версия
+из cache.
+
+<br>
+
+5. Локальный domains.srs включён в конфигурацию как отдельный
+резервный Rule-Set.
+
+</div>
+
+
+<div class="note note-warn">
+
+Важно: sing-box не предоставляет стандартного JSON-механизма
+автоматического переключения Remote → Cache → Local.
+Cache для Remote Rule-Set обрабатывается самим sing-box.
+Local Rule-Set является отдельным источником.
+
+</div>
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- DNS -->
+<!-- ========================================================= -->
+
+<div class="section">
+
+<h2>Выбор DNS-серверов</h2>
+
+
+<div class="grid">
+
+
+<div>
+
+<label for="redirectSelect">
+DNS для Redirect:
+</label>
+
+<select id="redirectSelect">
+</select>
+
+</div>
+
+
+<div>
+
+<label for="directSelect">
+DNS для Direct:
+</label>
+
+<select id="directSelect">
+</select>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- REDIRECT -->
+<!-- ========================================================= -->
+
+<div class="section">
+
+<h2>Маршрутизация в Redirect DNS</h2>
+
+
+<label for="customDomains">
+
+Свои домены для Redirect:
+
+</label>
+
+
+<textarea
+    id="customDomains"
+    rows="3"
+    placeholder="openai.com
+claude.ai
+discord.com"
+></textarea>
+
+
+<label for="customPackages">
+
+Android-приложения для Redirect:
+
+</label>
+
+
+<textarea
+    id="customPackages"
+    rows="3"
+    placeholder="com.openai.chatgpt
+com.anthropic.claude
+com.twitter.android"
+></textarea>
+
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- EXCLUSIONS -->
+<!-- ========================================================= -->
+
+<div class="section">
+
+<h2>Исключения</h2>
+
+
+<label for="excludeDomains">
+
+Домены → Direct DNS:
+
+</label>
+
+
+<textarea
+    id="excludeDomains"
+    rows="3"
+    placeholder="sberbank.ru
+gosuslugi.ru"
+></textarea>
+
+
+<div class="note">
+
+Это только изменяет DNS-сервер.
+Трафик домена не исключается из VPN автоматически.
+
+</div>
+
+
+
+<label for="excludePackages">
+
+Android-приложения → обход TUN:
+
+</label>
+
+
+<textarea
+    id="excludePackages"
+    rows="3"
+    placeholder="ru.sberbankmobile
+com.mirpay"
+></textarea>
+
+
+<div class="note">
+
+Трафик этих Android-приложений исключается из TUN.
+
+</div>
+
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- GENERATE -->
+<!-- ========================================================= -->
+
+<button onclick="generateConfig()">
+
+Скачать конфигурацию Sing-Box (.json)
+
+</button>
+
+
+<div
+    id="status"
+    class="status"
+>
+
+Готово к генерации.
+
+</div>
+
+
+</div>
+
+
+
 <script>
-    const REDIRECT_DNS = [
-        { name: "Xbox DNS (DoH)", url: "https://xbox-dns.ru/dns-query" },
-        { name: "Comss DNS (DoH)", url: "https://dns.comss.one/dns-query" },
-        { name: "Malw Link (DoH)", url: "https://dns.malw.link/dns-query" },
-        { name: "Astracat (DoH)", url: "https://dns.astracat.ru/dns-query" },
-        { name: "Mafioznik (DoH)", url: "https://dns.mafioznik.xyz/dns-query" },
-        { name: "Geohide (DoH)", url: "https://dns.geohide.ru:444/dns-query" }
-    ];
 
-    const DIRECT_DNS = [
-        { name: "AliDNS", url: "https://dns.alidns.com/dns-query" },
-        { name: "BebasID Standard", url: "https://dns.bebasid.com/dns-query" },
-        { name: "BebasID OISD", url: "https://dns.bebasid.com/dns-oisd" },
-        { name: "BebasID HaGeZi", url: "https://dns.bebasid.com/dns-hagezi" },
-        { name: "Cloudflare", url: "https://dns.cloudflare.com/dns-query" },
-        { name: "DNS.SB", url: "https://doh.dns.sb/dns-query" },
-        { name: "DNSPub", url: "https://dns.pub/dns-query" },
-        { name: "Google DNS", url: "https://dns.google/dns-query" },
-        { name: "Mullvad Adblock", url: "https://adblock.dns.mullvad.net/dns-query" },
-        { name: "OpenBLD Ada", url: "https://ada.openbld.net/dns-query" },
-        { name: "Quad9 Standard", url: "https://dns.quad9.net/dns-query" },
-        { name: "Quad9 ECS", url: "https://dns11.quad9.net/dns-query" },
-        { name: "Applied Privacy", url: "https://doh.applied-privacy.net/query" },
-        { name: "Digitale Gesellschaft", url: "https://dns.digitale-gesellschaft.ch/dns-query" },
-        { name: "JoinDNS4 NoAds", url: "https://noads.joindns4.eu/dns-query" },
-        { name: "LibreDNS Standard", url: "https://doh.libredns.gr/dns-query" },
-        { name: "LibreDNS Ads", url: "https://doh.libredns.gr/ads" },
-        { name: "DNSForge", url: "https://dnsforge.de/dns-query" },
-        { name: "HaGeZi Root", url: "https://root.hagezi.org/dns-query" },
-        { name: "HaGeZi Wurzn", url: "https://wurzn.hagezi.org/dns-query" },
-        { name: "HaGeZi Juuri", url: "https://juuri.hagezi.org/dns-query" },
-        { name: "Tiarap", url: "https://doh.tiarap.org/dns-query" },
-        { name: "TiarApp", url: "https://doh.tiar.app/dns-query" }
-    ];
 
-    window.onload = function() {
-        const redirSelect = document.getElementById('redirectSelect');
-        REDIRECT_DNS.forEach(dns => {
-            const opt = document.createElement('option');
-            opt.value = dns.url;
-            opt.textContent = dns.name;
-            redirSelect.appendChild(opt);
-        });
+/* ============================================================
+   DNS DATABASE
+============================================================ */
 
-        const dirSelect = document.getElementById('directSelect');
-        DIRECT_DNS.forEach(dns => {
-            const opt = document.createElement('option');
-            opt.value = dns.url;
-            opt.textContent = dns.name;
-            dirSelect.appendChild(opt);
-        });
+
+const REDIRECT_DNS = [
+
+    {
+        name:
+            "Xbox DNS (DoH)",
+
+        url:
+            "https://xbox-dns.ru/dns-query"
+    },
+
+    {
+        name:
+            "Comss DNS (DoH)",
+
+        url:
+            "https://dns.comss.one/dns-query"
+    },
+
+    {
+        name:
+            "Malw Link (DoH)",
+
+        url:
+            "https://dns.malw.link/dns-query"
+    },
+
+    {
+        name:
+            "Astracat (DoH)",
+
+        url:
+            "https://dns.astracat.ru/dns-query"
+    },
+
+    {
+        name:
+            "Mafioznik (DoH)",
+
+        url:
+            "https://dns.mafioznik.xyz/dns-query"
+    },
+
+    {
+        name:
+            "Geohide (DoH)",
+
+        url:
+            "https://dns.geohide.ru:444/dns-query"
+    }
+
+];
+
+
+const DIRECT_DNS = [
+
+    {
+        name:
+            "AliDNS",
+
+        url:
+            "https://dns.alidns.com/dns-query"
+    },
+
+    {
+        name:
+            "BebasID Standard",
+
+        url:
+            "https://dns.bebasid.com/dns-query"
+    },
+
+    {
+        name:
+            "BebasID OISD",
+
+        url:
+            "https://dns.bebasid.com/dns-oisd"
+    },
+
+    {
+        name:
+            "BebasID HaGeZi",
+
+        url:
+            "https://dns.bebasid.com/dns-hagezi"
+    },
+
+    {
+        name:
+            "Cloudflare",
+
+        url:
+            "https://dns.cloudflare.com/dns-query"
+    },
+
+    {
+        name:
+            "DNS.SB",
+
+        url:
+            "https://doh.dns.sb/dns-query"
+    },
+
+    {
+        name:
+            "DNSPub",
+
+        url:
+            "https://dns.pub/dns-query"
+    },
+
+    {
+        name:
+            "Google DNS",
+
+        url:
+            "https://dns.google/dns-query"
+    },
+
+    {
+        name:
+            "Mullvad Adblock",
+
+        url:
+            "https://adblock.dns.mullvad.net/dns-query"
+    },
+
+    {
+        name:
+            "OpenBLD Ada",
+
+        url:
+            "https://ada.openbld.net/dns-query"
+    },
+
+    {
+        name:
+            "Quad9 Standard",
+
+        url:
+            "https://dns.quad9.net/dns-query"
+    },
+
+    {
+        name:
+            "Quad9 ECS",
+
+        url:
+            "https://dns11.quad9.net/dns-query"
+    },
+
+    {
+        name:
+            "Applied Privacy",
+
+        url:
+            "https://doh.applied-privacy.net/query"
+    },
+
+    {
+        name:
+            "Digitale Gesellschaft",
+
+        url:
+            "https://dns.digitale-gesellschaft.ch/dns-query"
+    },
+
+    {
+        name:
+            "JoinDNS4 NoAds",
+
+        url:
+            "https://noads.joindns4.eu/dns-query"
+    },
+
+    {
+        name:
+            "LibreDNS Standard",
+
+        url:
+            "https://doh.libredns.gr/dns-query"
+    },
+
+    {
+        name:
+            "LibreDNS Ads",
+
+        url:
+            "https://doh.libredns.gr/ads"
+    },
+
+    {
+        name:
+            "DNSForge",
+
+        url:
+            "https://dnsforge.de/dns-query"
+    },
+
+    {
+        name:
+            "HaGeZi Root",
+
+        url:
+            "https://root.hagezi.org/dns-query"
+    },
+
+    {
+        name:
+            "HaGeZi Wurzn",
+
+        url:
+            "https://wurzn.hagezi.org/dns-query"
+    },
+
+    {
+        name:
+            "HaGeZi Juuri",
+
+        url:
+            "https://juuri.hagezi.org/dns-query"
+    },
+
+    {
+        name:
+            "Tiarap",
+
+        url:
+            "https://doh.tiarap.org/dns-query"
+    },
+
+    {
+        name:
+            "TiarApp",
+
+        url:
+            "https://doh.tiar.app/dns-query"
+    }
+
+];
+
+
+
+/* ============================================================
+   SELECT INITIALIZATION
+============================================================ */
+
+
+function fillSelect(id, list) {
+
+    const select =
+        document.getElementById(id);
+
+
+    list.forEach(
+        (dns, index) => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value =
+                dns.url;
+
+
+            option.textContent =
+                dns.name;
+
+
+            if (index === 0) {
+
+                option.selected =
+                    true;
+
+            }
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        fillSelect(
+            "redirectSelect",
+            REDIRECT_DNS
+        );
+
+
+        fillSelect(
+            "directSelect",
+            DIRECT_DNS
+        );
+
+    }
+);
+
+
+
+/* ============================================================
+   INPUT PARSER
+============================================================ */
+
+
+function parseInput(id) {
+
+    const value =
+        document
+            .getElementById(id)
+            .value
+            .trim();
+
+
+    if (!value) {
+
+        return [];
+
+    }
+
+
+    return value
+
+        .split(/[\n,]+/)
+
+        .map(
+            item =>
+                item.trim()
+        )
+
+        .filter(
+            Boolean
+        );
+
+}
+
+
+
+/* ============================================================
+   GENERATE CONFIG
+============================================================ */
+
+
+function generateConfig() {
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const remoteUrl =
+        document
+            .getElementById(
+                "remoteUrl"
+            )
+            .value
+            .trim();
+
+
+    const cachePath =
+        document
+            .getElementById(
+                "cachePath"
+            )
+            .value
+            .trim();
+
+
+    const localPath =
+        document
+            .getElementById(
+                "localPath"
+            )
+            .value
+            .trim();
+
+
+    const updateInterval =
+        document
+            .getElementById(
+                "updateInterval"
+            )
+            .value;
+
+
+    const redirectDns =
+        document
+            .getElementById(
+                "redirectSelect"
+            )
+            .value;
+
+
+    const directDns =
+        document
+            .getElementById(
+                "directSelect"
+            )
+            .value;
+
+
+
+    /* --------------------------------------------------------
+       VALIDATION
+    -------------------------------------------------------- */
+
+
+    if (
+        !remoteUrl ||
+        !cachePath ||
+        !localPath
+    ) {
+
+        status.textContent =
+            "Ошибка: необходимо указать Remote URL, Cache path и Local path.";
+
+        return;
+
+    }
+
+
+
+    /* --------------------------------------------------------
+       USER INPUT
+    -------------------------------------------------------- */
+
+
+    const customDomains =
+        parseInput(
+            "customDomains"
+        );
+
+
+    const customPackages =
+        parseInput(
+            "customPackages"
+        );
+
+
+    const excludeDomains =
+        parseInput(
+            "excludeDomains"
+        );
+
+
+    const excludePackages =
+        parseInput(
+            "excludePackages"
+        );
+
+
+
+    /* --------------------------------------------------------
+       TUN
+    -------------------------------------------------------- */
+
+
+    const tunInbound = {
+
+        type:
+            "tun",
+
+        tag:
+            "tun-in",
+
+        interface_name:
+            "tun0",
+
+        address:
+            [
+                "172.19.0.1/30"
+            ],
+
+        auto_route:
+            true,
+
+        strict_route:
+            true,
+
+        stack:
+            "gvisor",
+
+        mtu:
+            1400
+
     };
 
-    function parseInput(id) {
-        const val = document.getElementById(id).value;
-        if (!val.trim()) return [];
-        return val.split(/[\n,]/).map(s => s.trim()).filter(s => s.length > 0);
+
+
+    /*
+       Исключение приложений из TUN.
+    */
+
+
+    if (
+        excludePackages.length > 0
+    ) {
+
+        tunInbound.exclude_package =
+            excludePackages;
+
     }
 
-    function generateConfig() {
-        const activeLogLevel = document.getElementById('logLevelSelect').value;
-        const ruleSetSource = document.getElementById('ruleSetSource').value;
-        const selectedRedir = document.getElementById('redirectSelect').value;
-        const selectedDir = document.getElementById('directSelect').value;
 
-        const customDomains = parseInput('customDomains');
-        const customPackages = parseInput('customPackages');
-        const excludeDomains = parseInput('excludeDomains');
-        const excludePackages = parseInput('excludePackages');
 
-        let tunInbound = {
-            "type": "tun",
-            "tag": "tun-in",
-            "interface_name": "tun0",
-            "address": ["172.19.0.1/30"],
-            "auto_route": true,
-            "strict_route": true,
-            "stack": "gvisor",
-            "mtu": 1400
-        };
+    /* --------------------------------------------------------
+       CONFIG
+    -------------------------------------------------------- */
 
-        if (excludePackages.length > 0) {
-            tunInbound.exclude_package = excludePackages;
-        }
 
-        // Настройка источника rule-set
-        let ruleSetObj = {
-            "tag": "domains",
-            "format": "binary"
-        };
+    const config = {
 
-        if (ruleSetSource === 'remote') {
-            ruleSetObj.type = "remote";
-            ruleSetObj.url = "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
-            ruleSetObj.update_interval = "24h";
-            ruleSetObj.download_detour = "direct";
-        } else {
-            ruleSetObj.type = "local";
-            ruleSetObj.path = "domains.srs";
-        }
 
-        let config = {
-            "log": {
-                "level": activeLogLevel,
-                "timestamp": true
-            },
-            "dns": {
-                "servers": [
-                    {
-                        "type": "udp",
-                        "tag": "bootstrap",
-                        "server": "8.8.8.8"
-                    },
-                    {
-                        "type": "https",
-                        "tag": "redirect-dns",
-                        "server": selectedRedir,
-                        "domain_resolver": "bootstrap"
-                    },
-                    {
-                        "type": "https",
-                        "tag": "direct-dns",
-                        "server": selectedDir,
-                        "domain_resolver": "bootstrap"
-                    }
-                ],
-                "rules": [],
-                "strategy": "prefer_ipv4",
-                "independent_cache": true,
-                "final": "direct-dns"
-            },
-            "inbounds": [tunInbound],
-            "outbounds": [
-                { "type": "direct", "tag": "direct" }
-            ],
-            "route": {
-                "rule_set": [ruleSetObj],
-                "rules": [
-                    { "action": "sniff" },
-                    { "protocol": "dns", "action": "hijack-dns" },
-                    { "ip_is_private": true, "outbound": "direct" }
-                ],
-                "default_domain_resolver": "bootstrap",
-                "auto_detect_interface": true,
-                "final": "direct"
+        /* ----------------------------------------------------
+           LOG
+        ---------------------------------------------------- */
+
+
+        log: {
+
+            level:
+                document
+                    .getElementById(
+                        "logLevelSelect"
+                    )
+                    .value,
+
+            timestamp:
+                true
+
+        },
+
+
+
+        /* ----------------------------------------------------
+           CACHE
+        ---------------------------------------------------- */
+
+
+        experimental: {
+
+            cache_file: {
+
+                enabled:
+                    true,
+
+                path:
+                    cachePath
+
             }
-        };
 
-        // ПРИОРИТЕТ 1: Исключенные домены -> Direct DNS
-        if (excludeDomains.length > 0) {
-            config.dns.rules.push({
-                "domain_suffix": excludeDomains,
-                "server": "direct-dns"
-            });
+        },
+
+
+
+        /* ----------------------------------------------------
+           DNS
+        ---------------------------------------------------- */
+
+
+        dns: {
+
+
+            servers: [
+
+                {
+
+                    type:
+                        "udp",
+
+                    tag:
+                        "bootstrap",
+
+                    server:
+                        "8.8.8.8"
+
+                },
+
+
+                {
+
+                    type:
+                        "https",
+
+                    tag:
+                        "redirect-dns",
+
+                    server:
+                        redirectDns,
+
+                    domain_resolver:
+                        "bootstrap"
+
+                },
+
+
+                {
+
+                    type:
+                        "https",
+
+                    tag:
+                        "direct-dns",
+
+                    server:
+                        directDns,
+
+                    domain_resolver:
+                        "bootstrap"
+
+                }
+
+            ],
+
+
+            rules: [],
+
+
+            strategy:
+                "prefer_ipv4",
+
+
+            independent_cache:
+                true,
+
+
+            final:
+                "direct-dns"
+
+        },
+
+
+
+        /* ----------------------------------------------------
+           INBOUNDS
+        ---------------------------------------------------- */
+
+
+        inbounds: [
+
+            tunInbound
+
+        ],
+
+
+
+        /* ----------------------------------------------------
+           OUTBOUNDS
+        ---------------------------------------------------- */
+
+
+        outbounds: [
+
+            {
+
+                type:
+                    "direct",
+
+                tag:
+                    "direct"
+
+            }
+
+        ],
+
+
+
+        /* ----------------------------------------------------
+           ROUTE
+        ---------------------------------------------------- */
+
+
+        route: {
+
+
+            rule_set: [
+
+
+                /*
+                   PRIMARY REMOTE RULE-SET
+
+                   Обновляется через direct.
+                   Cache управляется experimental.cache_file.
+                */
+
+
+                {
+
+                    type:
+                        "remote",
+
+                    tag:
+                        "domains",
+
+                    format:
+                        "binary",
+
+                    url:
+                        remoteUrl,
+
+                    update_interval:
+                        updateInterval,
+
+                    download_detour:
+                        "direct"
+
+                },
+
+
+                /*
+                   LOCAL BACKUP RULE-SET
+
+                   Доступен в конфигурации как отдельный
+                   локальный Rule-Set.
+
+                   Он НЕ используется автоматически вместо
+                   remote, потому что sing-box не имеет
+                   стандартного fallback между rule-set.
+                */
+
+
+                {
+
+                    type:
+                        "local",
+
+                    tag:
+                        "domains-local",
+
+                    format:
+                        "binary",
+
+                    path:
+                        localPath
+
+                }
+
+            ],
+
+
+
+            rules: [
+
+
+                /*
+                   SNI / HTTP / QUIC sniffing
+                */
+
+
+                {
+
+                    action:
+                        "sniff"
+
+                },
+
+
+                /*
+                   Перехват DNS
+                */
+
+
+                {
+
+                    protocol:
+                        "dns",
+
+                    action:
+                        "hijack-dns"
+
+                },
+
+
+                /*
+                   Private IP → Direct
+                */
+
+
+                {
+
+                    ip_is_private:
+                        true,
+
+                    outbound:
+                        "direct"
+
+                }
+
+            ],
+
+
+            default_domain_resolver:
+                "bootstrap",
+
+
+            auto_detect_interface:
+                true,
+
+
+            final:
+                "direct"
+
         }
 
-        // ПРИОРИТЕТ 2: Кастомные приложения -> Redirect DNS
-        if (customPackages.length > 0) {
-            config.dns.rules.push({
-                "package_name": customPackages,
-                "server": "redirect-dns"
-            });
-        }
+    };
 
-        // ПРИОРИТЕТ 3: Кастомные домены -> Redirect DNS
-        if (customDomains.length > 0) {
-            config.dns.rules.push({
-                "domain_suffix": customDomains,
-                "server": "redirect-dns"
-            });
-        }
 
-        // ПРИОРИТЕТ 4: Основная база доменов -> Redirect DNS
+
+    /* ========================================================
+       DNS EXCLUSIONS
+    ======================================================== */
+
+
+    if (
+        excludeDomains.length > 0
+    ) {
+
         config.dns.rules.push({
-            "rule_set": "domains",
-            "server": "redirect-dns"
+
+            domain_suffix:
+                excludeDomains,
+
+            server:
+                "direct-dns"
+
         });
 
-        downloadJSON(config, `singbox_dns_config.json`);
     }
 
-    function downloadJSON(data, filename) {
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+
+
+    /* ========================================================
+       APP → REDIRECT DNS
+    ======================================================== */
+
+
+    if (
+        customPackages.length > 0
+    ) {
+
+        config.dns.rules.push({
+
+            package_name:
+                customPackages,
+
+            server:
+                "redirect-dns"
+
+        });
+
     }
+
+
+
+    /* ========================================================
+       DOMAIN → REDIRECT DNS
+    ======================================================== */
+
+
+    if (
+        customDomains.length > 0
+    ) {
+
+        config.dns.rules.push({
+
+            domain_suffix:
+                customDomains,
+
+            server:
+                "redirect-dns"
+
+        });
+
+    }
+
+
+
+    /* ========================================================
+       REMOTE RULE-SET → REDIRECT DNS
+    ======================================================== */
+
+
+    config.dns.rules.push({
+
+        rule_set:
+            "domains",
+
+        server:
+            "redirect-dns"
+
+    });
+
+
+
+    /* ========================================================
+       CREATE FILE
+    ======================================================== */
+
+
+    const json =
+        JSON.stringify(
+            config,
+            null,
+            2
+        );
+
+
+    const blob =
+        new Blob(
+
+            [
+                json
+            ],
+
+            {
+                type:
+                    "application/json"
+            }
+
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "singbox_dns_config.json";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    setTimeout(
+
+        () => {
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        },
+
+        1000
+
+    );
+
+
+
+    /* ========================================================
+       STATUS
+    ======================================================== */
+
+
+    status.textContent =
+
+        "Конфигурация успешно создана.\n\n" +
+
+        "Remote Rule-Set:\n" +
+
+        remoteUrl +
+
+        "\n\n" +
+
+        "Update interval:\n" +
+
+        updateInterval +
+
+        "\n\n" +
+
+        "Cache:\n" +
+
+        cachePath +
+
+        "\n\n" +
+
+        "Local Rule-Set:\n" +
+
+        localPath +
+
+        "\n\n" +
+
+        "Remote Rule-Set используется как основной.\n" +
+
+        "Cache включён через experimental.cache_file.\n" +
+
+        "Local Rule-Set добавлен отдельно и не является автоматическим fallback.";
+
+}
+
+
 </script>
+
 </body>
 </html>
