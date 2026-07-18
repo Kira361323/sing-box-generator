@@ -29,7 +29,6 @@ body {
     color: var(--text);
     margin: 0;
     padding: 20px;
-
     display: flex;
     justify-content: center;
 }
@@ -37,47 +36,32 @@ body {
 .container {
     width: 100%;
     max-width: 900px;
-
     background: var(--surface);
     padding: 25px;
-
     border-radius: 12px;
-
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 h1,
 h2 {
     margin-top: 0;
     color: var(--accent);
-
-    border-bottom:
-        1px solid var(--border);
-
+    border-bottom: 1px solid var(--border);
     padding-bottom: 10px;
 }
 
 .section {
     background: var(--card);
-
     padding: 15px;
-
     border-radius: 8px;
-
     margin-bottom: 20px;
-
-    border:
-        1px solid var(--border);
+    border: 1px solid var(--border);
 }
 
 label {
     display: block;
-
     margin-bottom: 6px;
-
     font-weight: 600;
-
     font-size: 0.9em;
 }
 
@@ -85,22 +69,13 @@ textarea,
 select,
 input {
     width: 100%;
-
     background: var(--surface);
-
     color: var(--text);
-
-    border:
-        1px solid var(--border);
-
+    border: 1px solid var(--border);
     border-radius: 6px;
-
     padding: 10px;
-
     font-family: monospace;
-
     font-size: 0.9em;
-
     margin-bottom: 15px;
 }
 
@@ -112,93 +87,60 @@ textarea:focus,
 select:focus,
 input:focus {
     outline: none;
-
-    border-color:
-        var(--accent);
+    border-color: var(--accent);
 }
 
 .grid {
     display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
 
 button {
     width: 100%;
-
-    background:
-        var(--success);
-
-    color:
-        #11111b;
-
+    background: var(--success);
+    color: #11111b;
     border: none;
-
     padding: 14px 20px;
-
     font-size: 1.1em;
-
     font-weight: bold;
-
     border-radius: 6px;
-
     cursor: pointer;
 }
 
 button:hover {
-    background:
-        #94e28f;
+    background: #94e28f;
 }
 
 .note {
     font-size: 0.8em;
-
-    color:
-        #a6adc8;
-
+    color: #a6adc8;
     margin-top: -10px;
-
     margin-bottom: 15px;
-
     line-height: 1.5;
 }
 
 .note-warn {
-    color:
-        var(--warn);
+    color: var(--warn);
 }
 
 .status {
     padding: 10px;
-
-    border:
-        1px solid var(--border);
-
+    border: 1px solid var(--border);
     border-radius: 6px;
-
     margin-top: 10px;
-
     font-family: monospace;
-
     font-size: 0.85em;
-
     white-space: pre-wrap;
 }
 
 @media (max-width: 600px) {
-
     .grid {
-        grid-template-columns:
-            1fr;
+        grid-template-columns: 1fr;
     }
-
 }
 </style>
 </head>
-
 
 <body>
 
@@ -208,13 +150,12 @@ button:hover {
 
 
 <!-- ========================================================= -->
-<!-- SYSTEM -->
+<!-- SYSTEM SETTINGS -->
 <!-- ========================================================= -->
 
 <div class="section">
 
 <h2>Системные параметры</h2>
-
 
 <div class="grid">
 
@@ -314,52 +255,33 @@ Remote Rule-Set URL:
 >
 
 
-<label for="localPath">
-Локальный резервный Rule-Set:
-</label>
-
-<input
-    id="localPath"
-    value="domains.srs"
->
-
-
 <div class="note">
 
-<b>Режим Remote + Cache:</b>
+Remote Rule-Set используется как основной источник.
+
+<br><br>
+
+При первом запуске sing-box пытается скачать
+<b>domains.srs</b> и сохранить его в кеш.
 
 <br>
 
-1. При первом запуске sing-box загружает Remote Rule-Set.
+При последующих запусках sing-box проверяет наличие
+обновления согласно выбранному интервалу.
 
 <br>
 
-2. Загруженный Rule-Set сохраняется в cache.
-
-<br>
-
-3. При последующих запусках sing-box проверяет обновление
-согласно выбранному интервалу.
-
-<br>
-
-4. Если обновление недоступно, используется сохранённая версия
-из cache.
-
-<br>
-
-5. Локальный domains.srs включён в конфигурацию как отдельный
-резервный Rule-Set.
+Если обновление недоступно, ранее сохранённая версия
+Remote Rule-Set может использоваться из кеша.
 
 </div>
 
 
 <div class="note note-warn">
 
-Важно: sing-box не предоставляет стандартного JSON-механизма
-автоматического переключения Remote → Cache → Local.
-Cache для Remote Rule-Set обрабатывается самим sing-box.
-Local Rule-Set является отдельным источником.
+Локальный domains.srs намеренно не добавляется в конфигурацию.
+Это предотвращает ошибку импорта при отсутствии файла
+в каталоге приложения Sing-box.
 
 </div>
 
@@ -368,16 +290,14 @@ Local Rule-Set является отдельным источником.
 
 
 <!-- ========================================================= -->
-<!-- DNS -->
+<!-- DNS SERVERS -->
 <!-- ========================================================= -->
 
 <div class="section">
 
 <h2>Выбор DNS-серверов</h2>
 
-
 <div class="grid">
-
 
 <div>
 
@@ -402,7 +322,6 @@ DNS для Direct:
 
 </div>
 
-
 </div>
 
 </div>
@@ -410,7 +329,7 @@ DNS для Direct:
 
 
 <!-- ========================================================= -->
-<!-- REDIRECT -->
+<!-- REDIRECT DNS -->
 <!-- ========================================================= -->
 
 <div class="section">
@@ -480,11 +399,10 @@ gosuslugi.ru"
 
 <div class="note">
 
-Это только изменяет DNS-сервер.
+Это изменяет только DNS-сервер.
 Трафик домена не исключается из VPN автоматически.
 
 </div>
-
 
 
 <label for="excludePackages">
@@ -504,10 +422,10 @@ com.mirpay"
 
 <div class="note">
 
-Трафик этих Android-приложений исключается из TUN.
+Трафик этих Android-приложений исключается из TUN
+и отправляется напрямую.
 
 </div>
-
 
 </div>
 
@@ -533,7 +451,6 @@ com.mirpay"
 
 </div>
 
-
 </div>
 
 
@@ -542,247 +459,166 @@ com.mirpay"
 
 
 /* ============================================================
-   DNS DATABASE
+   REDIRECT DNS
 ============================================================ */
 
 
 const REDIRECT_DNS = [
 
     {
-        name:
-            "Xbox DNS (DoH)",
-
-        url:
-            "https://xbox-dns.ru/dns-query"
+        name: "Xbox DNS (DoH)",
+        url: "https://xbox-dns.ru/dns-query"
     },
 
     {
-        name:
-            "Comss DNS (DoH)",
-
-        url:
-            "https://dns.comss.one/dns-query"
+        name: "Comss DNS (DoH)",
+        url: "https://dns.comss.one/dns-query"
     },
 
     {
-        name:
-            "Malw Link (DoH)",
-
-        url:
-            "https://dns.malw.link/dns-query"
+        name: "Malw Link (DoH)",
+        url: "https://dns.malw.link/dns-query"
     },
 
     {
-        name:
-            "Astracat (DoH)",
-
-        url:
-            "https://dns.astracat.ru/dns-query"
+        name: "Astracat (DoH)",
+        url: "https://dns.astracat.ru/dns-query"
     },
 
     {
-        name:
-            "Mafioznik (DoH)",
-
-        url:
-            "https://dns.mafioznik.xyz/dns-query"
+        name: "Mafioznik (DoH)",
+        url: "https://dns.mafioznik.xyz/dns-query"
     },
 
     {
-        name:
-            "Geohide (DoH)",
-
-        url:
-            "https://dns.geohide.ru:444/dns-query"
+        name: "Geohide (DoH)",
+        url: "https://dns.geohide.ru:444/dns-query"
     }
 
 ];
 
 
+
+/* ============================================================
+   DIRECT DNS
+============================================================ */
+
+
 const DIRECT_DNS = [
 
     {
-        name:
-            "AliDNS",
-
-        url:
-            "https://dns.alidns.com/dns-query"
+        name: "AliDNS",
+        url: "https://dns.alidns.com/dns-query"
     },
 
     {
-        name:
-            "BebasID Standard",
-
-        url:
-            "https://dns.bebasid.com/dns-query"
+        name: "BebasID Standard",
+        url: "https://dns.bebasid.com/dns-query"
     },
 
     {
-        name:
-            "BebasID OISD",
-
-        url:
-            "https://dns.bebasid.com/dns-oisd"
+        name: "BebasID OISD",
+        url: "https://dns.bebasid.com/dns-oisd"
     },
 
     {
-        name:
-            "BebasID HaGeZi",
-
-        url:
-            "https://dns.bebasid.com/dns-hagezi"
+        name: "BebasID HaGeZi",
+        url: "https://dns.bebasid.com/dns-hagezi"
     },
 
     {
-        name:
-            "Cloudflare",
-
-        url:
-            "https://dns.cloudflare.com/dns-query"
+        name: "Cloudflare",
+        url: "https://dns.cloudflare.com/dns-query"
     },
 
     {
-        name:
-            "DNS.SB",
-
-        url:
-            "https://doh.dns.sb/dns-query"
+        name: "DNS.SB",
+        url: "https://doh.dns.sb/dns-query"
     },
 
     {
-        name:
-            "DNSPub",
-
-        url:
-            "https://dns.pub/dns-query"
+        name: "DNSPub",
+        url: "https://dns.pub/dns-query"
     },
 
     {
-        name:
-            "Google DNS",
-
-        url:
-            "https://dns.google/dns-query"
+        name: "Google DNS",
+        url: "https://dns.google/dns-query"
     },
 
     {
-        name:
-            "Mullvad Adblock",
-
-        url:
-            "https://adblock.dns.mullvad.net/dns-query"
+        name: "Mullvad Adblock",
+        url: "https://adblock.dns.mullvad.net/dns-query"
     },
 
     {
-        name:
-            "OpenBLD Ada",
-
-        url:
-            "https://ada.openbld.net/dns-query"
+        name: "OpenBLD Ada",
+        url: "https://ada.openbld.net/dns-query"
     },
 
     {
-        name:
-            "Quad9 Standard",
-
-        url:
-            "https://dns.quad9.net/dns-query"
+        name: "Quad9 Standard",
+        url: "https://dns.quad9.net/dns-query"
     },
 
     {
-        name:
-            "Quad9 ECS",
-
-        url:
-            "https://dns11.quad9.net/dns-query"
+        name: "Quad9 ECS",
+        url: "https://dns11.quad9.net/dns-query"
     },
 
     {
-        name:
-            "Applied Privacy",
-
-        url:
-            "https://doh.applied-privacy.net/query"
+        name: "Applied Privacy",
+        url: "https://doh.applied-privacy.net/query"
     },
 
     {
-        name:
-            "Digitale Gesellschaft",
-
-        url:
-            "https://dns.digitale-gesellschaft.ch/dns-query"
+        name: "Digitale Gesellschaft",
+        url: "https://dns.digitale-gesellschaft.ch/dns-query"
     },
 
     {
-        name:
-            "JoinDNS4 NoAds",
-
-        url:
-            "https://noads.joindns4.eu/dns-query"
+        name: "JoinDNS4 NoAds",
+        url: "https://noads.joindns4.eu/dns-query"
     },
 
     {
-        name:
-            "LibreDNS Standard",
-
-        url:
-            "https://doh.libredns.gr/dns-query"
+        name: "LibreDNS Standard",
+        url: "https://doh.libredns.gr/dns-query"
     },
 
     {
-        name:
-            "LibreDNS Ads",
-
-        url:
-            "https://doh.libredns.gr/ads"
+        name: "LibreDNS Ads",
+        url: "https://doh.libredns.gr/ads"
     },
 
     {
-        name:
-            "DNSForge",
-
-        url:
-            "https://dnsforge.de/dns-query"
+        name: "DNSForge",
+        url: "https://dnsforge.de/dns-query"
     },
 
     {
-        name:
-            "HaGeZi Root",
-
-        url:
-            "https://root.hagezi.org/dns-query"
+        name: "HaGeZi Root",
+        url: "https://root.hagezi.org/dns-query"
     },
 
     {
-        name:
-            "HaGeZi Wurzn",
-
-        url:
-            "https://wurzn.hagezi.org/dns-query"
+        name: "HaGeZi Wurzn",
+        url: "https://wurzn.hagezi.org/dns-query"
     },
 
     {
-        name:
-            "HaGeZi Juuri",
-
-        url:
-            "https://juuri.hagezi.org/dns-query"
+        name: "HaGeZi Juuri",
+        url: "https://juuri.hagezi.org/dns-query"
     },
 
     {
-        name:
-            "Tiarap",
-
-        url:
-            "https://doh.tiarap.org/dns-query"
+        name: "Tiarap",
+        url: "https://doh.tiarap.org/dns-query"
     },
 
     {
-        name:
-            "TiarApp",
-
-        url:
-            "https://doh.tiar.app/dns-query"
+        name: "TiarApp",
+        url: "https://doh.tiar.app/dns-query"
     }
 
 ];
@@ -892,7 +728,7 @@ function parseInput(id) {
 
 
 /* ============================================================
-   GENERATE CONFIG
+   CONFIG GENERATOR
 ============================================================ */
 
 
@@ -918,15 +754,6 @@ function generateConfig() {
         document
             .getElementById(
                 "cachePath"
-            )
-            .value
-            .trim();
-
-
-    const localPath =
-        document
-            .getElementById(
-                "localPath"
             )
             .value
             .trim();
@@ -964,12 +791,11 @@ function generateConfig() {
 
     if (
         !remoteUrl ||
-        !cachePath ||
-        !localPath
+        !cachePath
     ) {
 
         status.textContent =
-            "Ошибка: необходимо указать Remote URL, Cache path и Local path.";
+            "Ошибка: необходимо указать Remote URL и Cache path.";
 
         return;
 
@@ -978,7 +804,7 @@ function generateConfig() {
 
 
     /* --------------------------------------------------------
-       USER INPUT
+       INPUTS
     -------------------------------------------------------- */
 
 
@@ -1008,7 +834,7 @@ function generateConfig() {
 
 
     /* --------------------------------------------------------
-       TUN
+       TUN INBOUND
     -------------------------------------------------------- */
 
 
@@ -1044,9 +870,9 @@ function generateConfig() {
 
 
 
-    /*
-       Исключение приложений из TUN.
-    */
+    /* --------------------------------------------------------
+       EXCLUDE ANDROID PACKAGES
+    -------------------------------------------------------- */
 
 
     if (
@@ -1061,16 +887,16 @@ function generateConfig() {
 
 
     /* --------------------------------------------------------
-       CONFIG
+       MAIN CONFIG
     -------------------------------------------------------- */
 
 
     const config = {
 
 
-        /* ----------------------------------------------------
+        /* ====================================================
            LOG
-        ---------------------------------------------------- */
+        ==================================================== */
 
 
         log: {
@@ -1089,9 +915,9 @@ function generateConfig() {
 
 
 
-        /* ----------------------------------------------------
+        /* ====================================================
            CACHE
-        ---------------------------------------------------- */
+        ==================================================== */
 
 
         experimental: {
@@ -1110,15 +936,17 @@ function generateConfig() {
 
 
 
-        /* ----------------------------------------------------
+        /* ====================================================
            DNS
-        ---------------------------------------------------- */
+        ==================================================== */
 
 
         dns: {
 
 
             servers: [
+
+                /* Bootstrap DNS */
 
                 {
 
@@ -1133,6 +961,8 @@ function generateConfig() {
 
                 },
 
+
+                /* Redirect DNS */
 
                 {
 
@@ -1150,6 +980,8 @@ function generateConfig() {
 
                 },
 
+
+                /* Direct DNS */
 
                 {
 
@@ -1188,9 +1020,9 @@ function generateConfig() {
 
 
 
-        /* ----------------------------------------------------
-           INBOUNDS
-        ---------------------------------------------------- */
+        /* ====================================================
+           INBOUND
+        ==================================================== */
 
 
         inbounds: [
@@ -1201,9 +1033,9 @@ function generateConfig() {
 
 
 
-        /* ----------------------------------------------------
-           OUTBOUNDS
-        ---------------------------------------------------- */
+        /* ====================================================
+           OUTBOUND
+        ==================================================== */
 
 
         outbounds: [
@@ -1222,24 +1054,26 @@ function generateConfig() {
 
 
 
-        /* ----------------------------------------------------
-           ROUTE
-        ---------------------------------------------------- */
+        /* ====================================================
+           ROUTING
+        ==================================================== */
 
 
         route: {
 
 
+            /* ------------------------------------------------
+               REMOTE RULE-SET
+
+               Основной Rule-Set.
+
+               При загрузке используется direct.
+
+               Cache включён через experimental.cache_file.
+            ------------------------------------------------ */
+
+
             rule_set: [
-
-
-                /*
-                   PRIMARY REMOTE RULE-SET
-
-                   Обновляется через direct.
-                   Cache управляется experimental.cache_file.
-                */
-
 
                 {
 
@@ -1261,48 +1095,21 @@ function generateConfig() {
                     download_detour:
                         "direct"
 
-                },
-
-
-                /*
-                   LOCAL BACKUP RULE-SET
-
-                   Доступен в конфигурации как отдельный
-                   локальный Rule-Set.
-
-                   Он НЕ используется автоматически вместо
-                   remote, потому что sing-box не имеет
-                   стандартного fallback между rule-set.
-                */
-
-
-                {
-
-                    type:
-                        "local",
-
-                    tag:
-                        "domains-local",
-
-                    format:
-                        "binary",
-
-                    path:
-                        localPath
-
                 }
 
             ],
 
 
 
+            /* ------------------------------------------------
+               ROUTING RULES
+            ------------------------------------------------ */
+
+
             rules: [
 
 
-                /*
-                   SNI / HTTP / QUIC sniffing
-                */
-
+                /* Traffic sniffing */
 
                 {
 
@@ -1312,10 +1119,7 @@ function generateConfig() {
                 },
 
 
-                /*
-                   Перехват DNS
-                */
-
+                /* DNS hijacking */
 
                 {
 
@@ -1328,10 +1132,7 @@ function generateConfig() {
                 },
 
 
-                /*
-                   Private IP → Direct
-                */
-
+                /* Private IP addresses */
 
                 {
 
@@ -1346,13 +1147,20 @@ function generateConfig() {
             ],
 
 
+
+            /* Resolver for routing */
+
             default_domain_resolver:
                 "bootstrap",
 
 
+            /* Detect physical interface */
+
             auto_detect_interface:
                 true,
 
+
+            /* Default outbound */
 
             final:
                 "direct"
@@ -1364,7 +1172,7 @@ function generateConfig() {
 
 
     /* ========================================================
-       DNS EXCLUSIONS
+       EXCLUDED DOMAINS → DIRECT DNS
     ======================================================== */
 
 
@@ -1387,7 +1195,7 @@ function generateConfig() {
 
 
     /* ========================================================
-       APP → REDIRECT DNS
+       SELECTED APPS → REDIRECT DNS
     ======================================================== */
 
 
@@ -1410,7 +1218,7 @@ function generateConfig() {
 
 
     /* ========================================================
-       DOMAIN → REDIRECT DNS
+       SELECTED DOMAINS → REDIRECT DNS
     ======================================================== */
 
 
@@ -1450,7 +1258,7 @@ function generateConfig() {
 
 
     /* ========================================================
-       CREATE FILE
+       SERIALIZE JSON
     ======================================================== */
 
 
@@ -1460,6 +1268,12 @@ function generateConfig() {
             null,
             2
         );
+
+
+
+    /* ========================================================
+       DOWNLOAD
+    ======================================================== */
 
 
     const blob =
@@ -1508,6 +1322,7 @@ function generateConfig() {
     link.remove();
 
 
+
     setTimeout(
 
         () => {
@@ -1551,17 +1366,11 @@ function generateConfig() {
 
         "\n\n" +
 
-        "Local Rule-Set:\n" +
+        "Локальный domains.srs НЕ требуется.\n\n" +
 
-        localPath +
+        "Конфигурация использует только Remote Rule-Set " +
 
-        "\n\n" +
-
-        "Remote Rule-Set используется как основной.\n" +
-
-        "Cache включён через experimental.cache_file.\n" +
-
-        "Local Rule-Set добавлен отдельно и не является автоматическим fallback.";
+        "с включённым cache_file.";
 
 }
 
