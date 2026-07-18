@@ -258,35 +258,50 @@ Remote Rule-Set URL:
 
 <div class="note">
 
-Remote Rule-Set используется как источник списка доменов.
+Remote Rule-Set используется для выбора DNS redirect.
 
 <br><br>
 
-При первом запуске sing-box скачивает domains.srs
-и сохраняет его в cache.db.
+Логика:
 
 <br>
 
-При следующих запусках sing-box использует сохранённый
-кеш, пока не будет получена новая версия.
+1. Исключённые приложения и домены → DNS оператора/провайдера.
 
 <br>
 
-Если обновление Remote Rule-Set временно недоступно,
-предыдущая закешированная версия используется автоматически.
+2. Выбранные приложения → Redirect DNS.
 
 <br>
 
-Локальный domains.srs напрямую в конфигурацию не добавляется,
-поэтому ошибка отсутствующего локального файла не возникает.
+3. Выбранные домены → Redirect DNS.
+
+<br>
+
+4. Домены из Remote Rule-Set → Redirect DNS.
+
+<br>
+
+5. Всё остальное → Direct DNS.
+
+<br><br>
+
+Кеш управляется sing-box через experimental.cache_file.
+Remote Rule-Set не указывается как локальный файл, поэтому
+отсутствующий domains.srs не должен вызывать ошибку
+"no such file or directory".
 
 </div>
 
 
 <div class="note note-warn">
 
-Не указывайте domains.srs как type: local,
-если файл физически не существует в каталоге приложения.
+Важно: cache_file — это кеш sing-box.
+Если Remote Rule-Set ещё ни разу не был успешно загружен,
+а сеть недоступна, поведение зависит от версии sing-box и
+состояния кеша. Конфиг намеренно не содержит путь
+/storage/.../domains.srs, так как такой файл заранее не создаётся
+браузером-конфигуратором.
 
 </div>
 
@@ -313,6 +328,11 @@ DNS для Redirect:
 <select id="redirectSelect">
 </select>
 
+<div class="note">
+Используется выбранными приложениями,
+выбранными доменами и domains.srs.
+</div>
+
 </div>
 
 
@@ -325,18 +345,12 @@ DNS для Direct:
 <select id="directSelect">
 </select>
 
-</div>
-
-</div>
-
 <div class="note">
+Используется для всех запросов,
+которые не попали под другие правила.
+</div>
 
-Вся система по умолчанию использует Direct DNS.
-
-<br>
-
-Приложения и домены, указанные ниже,
-используют Redirect DNS.
+</div>
 
 </div>
 
@@ -358,7 +372,7 @@ DNS для Direct:
 
 <textarea
     id="customDomains"
-    rows="4"
+    rows="3"
     placeholder="openai.com
 claude.ai
 discord.com"
@@ -371,50 +385,11 @@ Android-приложения для Redirect:
 
 <textarea
     id="customPackages"
-    rows="4"
+    rows="3"
     placeholder="com.openai.chatgpt
 com.anthropic.claude
 com.twitter.android"
 ></textarea>
-
-</div>
-
-
-
-<!-- ========================================================= -->
-<!-- REMOTE RULE-SET -->
-<!-- ========================================================= -->
-
-<div class="section">
-
-<h2>Remote Rule-Set → Redirect DNS</h2>
-
-<div class="note">
-
-Все домены, содержащиеся в удалённом domains.srs,
-автоматически используют Redirect DNS.
-
-<br><br>
-
-Порядок обработки:
-
-<br>
-
-1. Android-приложения из списка → Redirect DNS
-
-<br>
-
-2. Домены из списка → Redirect DNS
-
-<br>
-
-3. Домены из domains.srs → Redirect DNS
-
-<br>
-
-4. Все остальные DNS-запросы → Direct DNS
-
-</div>
 
 </div>
 
@@ -430,32 +405,24 @@ com.twitter.android"
 
 
 <label for="excludeDomains">
-Домены → Direct DNS:
+Домены → DNS оператора/провайдера:
 </label>
 
 <textarea
     id="excludeDomains"
-    rows="4"
+    rows="3"
     placeholder="sberbank.ru
 gosuslugi.ru"
 ></textarea>
 
 
-<div class="note">
-
-Эти домены имеют приоритет над Remote Rule-Set
-и используют Direct DNS.
-
-</div>
-
-
 <label for="excludePackages">
-Android-приложения → обход TUN:
+Android-приложения → DNS оператора/провайдера:
 </label>
 
 <textarea
     id="excludePackages"
-    rows="4"
+    rows="3"
     placeholder="ru.sberbankmobile
 com.mirpay"
 ></textarea>
@@ -463,8 +430,16 @@ com.mirpay"
 
 <div class="note">
 
-Трафик этих Android-приложений исключается из TUN
-и отправляется напрямую.
+Эти правила отправляют DNS-запросы выбранных доменов
+и приложений на DNS-сервер local.
+
+local — системный DNS, предоставленный Android,
+провайдером или мобильным оператором.
+
+<br><br>
+
+Трафик приложения не исключается из TUN.
+Меняется только DNS-сервер, используемый для разрешения имён.
 
 </div>
 
@@ -503,13 +478,13 @@ com.mirpay"
 
 
 /*
- * REDIRECT DNS
+ * DNS Redirect
  *
- * Используются для:
+ * Используется:
  *
- * - выбранных Android-приложений
- * - выбранных доменов
- * - domains.srs
+ * - выбранными Android-приложениями
+ * - выбранными доменами
+ * - доменами из domains.srs
  */
 
 
@@ -550,9 +525,17 @@ const REDIRECT_DNS = [
 
 
 /*
- * DIRECT DNS
+ * DNS Direct
  *
- * Используется для всей системы по умолчанию.
+ * Используется:
+ *
+ * - всеми запросами по умолчанию
+ * - если запрос не попал под Redirect
+ *
+ * ВАЖНО:
+ *
+ * Это не DNS оператора.
+ * Это выбранный пользователем DoH-сервер.
  */
 
 
@@ -683,34 +666,34 @@ const DIRECT_DNS = [
 
 
 /*
- * sing-box 1.12+ / 1.13+
+ * sing-box 1.13.x:
  *
- * URL:
+ * Для HTTPS DNS-сервера задаём:
  *
- * https://dns.alidns.com/dns-query
+ * type
+ * server
+ * server_port
+ * path
  *
- * преобразуется в:
+ * НЕ передаём URL целиком в поле server.
  *
- * {
- *     type: "https",
- *     server: "dns.alidns.com",
- *     server_port: 443,
- *     path: "/dns-query"
- * }
+ * Правильно:
+ *
+ * server: "dns.alidns.com"
+ *
+ * server_port: 443
+ *
+ * path: "/dns-query"
  *
  *
- * URL:
+ * Неправильно:
  *
- * https://dns.geohide.ru:444/dns-query
+ * server:
+ * "https://dns.alidns.com/dns-query"
  *
- * преобразуется в:
+ * Это и приводило к ошибкам вида:
  *
- * {
- *     type: "https",
- *     server: "dns.geohide.ru",
- *     server_port: 444,
- *     path: "/dns-query"
- * }
+ * https://https:%2F%2Fdns.alidns.com%2Fdns-query/dns-query
  */
 
 
@@ -740,7 +723,7 @@ function parseDnsUrl(url) {
     } catch (error) {
 
         throw new Error(
-            `Некорректный DNS URL:\n${value}`
+            `Некорректный DNS URL: ${value}`
         );
 
     }
@@ -751,7 +734,7 @@ function parseDnsUrl(url) {
     ) {
 
         throw new Error(
-            `DNS-сервер должен использовать HTTPS:\n${value}`
+            `DNS-сервер должен использовать HTTPS: ${value}`
         );
 
     }
@@ -764,7 +747,7 @@ function parseDnsUrl(url) {
     if (!server) {
 
         throw new Error(
-            `Не удалось определить DNS hostname:\n${value}`
+            `Не удалось определить hostname DNS-сервера: ${value}`
         );
 
     }
@@ -783,26 +766,32 @@ function parseDnsUrl(url) {
     ) {
 
         throw new Error(
-            `Некорректный порт DNS-сервера:\n${value}`
+            `Некорректный порт DNS-сервера: ${value}`
         );
 
     }
 
 
-    const path =
-        parsed.pathname || "/dns-query";
+    let path =
+        parsed.pathname;
+
+
+    if (!path || path === "/") {
+
+        path =
+            "/dns-query";
+
+    }
 
 
     return {
 
-        server:
-            server,
+        server,
 
         server_port:
             serverPort,
 
-        path:
-            path
+        path
 
     };
 
@@ -920,42 +909,6 @@ function parseInput(id) {
 
 
 /* ============================================================
-   DNS SERVER FACTORY
-============================================================ */
-
-
-function createDnsServer(
-    tag,
-    parsedDns
-) {
-
-    return {
-
-        type:
-            "https",
-
-        tag:
-            tag,
-
-        server:
-            parsedDns.server,
-
-        server_port:
-            parsedDns.server_port,
-
-        path:
-            parsedDns.path,
-
-        domain_resolver:
-            "bootstrap"
-
-    };
-
-}
-
-
-
-/* ============================================================
    GENERATE CONFIG
 ============================================================ */
 
@@ -1018,6 +971,14 @@ function generateConfig() {
                 .value;
 
 
+        const logLevel =
+            document
+                .getElementById(
+                    "logLevelSelect"
+                )
+                .value;
+
+
 
         /* ====================================================
            VALIDATION
@@ -1048,7 +1009,7 @@ function generateConfig() {
 
 
         /* ====================================================
-           PARSE DNS
+           PARSE DoH
         ==================================================== */
 
 
@@ -1100,6 +1061,20 @@ function generateConfig() {
         ==================================================== */
 
 
+        /*
+         * TUN нужен только для перехвата DNS.
+         *
+         * Мы НЕ добавляем:
+         *
+         * outbound: direct
+         *
+         * для обычного трафика.
+         *
+         * Поэтому конфигурация не пытается маршрутизировать
+         * весь пользовательский трафик через direct outbound.
+         */
+
+
         const tunInbound = {
 
             type:
@@ -1120,7 +1095,7 @@ function generateConfig() {
                 true,
 
             strict_route:
-                true,
+                false,
 
             stack:
                 "gvisor",
@@ -1129,22 +1104,6 @@ function generateConfig() {
                 1400
 
         };
-
-
-
-        /* ====================================================
-           EXCLUDE PACKAGES
-        ==================================================== */
-
-
-        if (
-            excludePackages.length > 0
-        ) {
-
-            tunInbound.exclude_package =
-                excludePackages;
-
-        }
 
 
 
@@ -1164,11 +1123,7 @@ function generateConfig() {
             log: {
 
                 level:
-                    document
-                        .getElementById(
-                            "logLevelSelect"
-                        )
-                        .value,
+                    logLevel,
 
                 timestamp:
                     true
@@ -1207,13 +1162,28 @@ function generateConfig() {
 
                 servers: [
 
-                    /* =========================================
-                       BOOTSTRAP
-                    ========================================= */
+
+                    /* -----------------------------------------
+                       SYSTEM / PROVIDER DNS
+                    ----------------------------------------- */
 
 
                     {
+                        type:
+                            "local",
 
+                        tag:
+                            "local"
+
+                    },
+
+
+                    /* -----------------------------------------
+                       BOOTSTRAP DNS
+                    ----------------------------------------- */
+
+
+                    {
                         type:
                             "udp",
 
@@ -1229,28 +1199,74 @@ function generateConfig() {
                     },
 
 
-                    /* =========================================
+                    /* -----------------------------------------
                        REDIRECT DNS
-                    ========================================= */
+                    ----------------------------------------- */
 
 
-                    createDnsServer(
-                        "redirect-dns",
-                        redirectDns
-                    ),
+                    {
+                        type:
+                            "https",
+
+                        tag:
+                            "redirect-dns",
+
+                        server:
+                            redirectDns.server,
+
+                        server_port:
+                            redirectDns.server_port,
+
+                        path:
+                            redirectDns.path,
+
+                        domain_resolver:
+                            "bootstrap"
+
+                    },
 
 
-                    /* =========================================
+                    /* -----------------------------------------
                        DIRECT DNS
-                    ========================================= */
+                    ----------------------------------------- */
 
 
-                    createDnsServer(
-                        "direct-dns",
-                        directDns
-                    )
+                    {
+                        type:
+                            "https",
+
+                        tag:
+                            "direct-dns",
+
+                        server:
+                            directDns.server,
+
+                        server_port:
+                            directDns.server_port,
+
+                        path:
+                            directDns.path,
+
+                        domain_resolver:
+                            "bootstrap"
+
+                    }
 
                 ],
+
+
+                /*
+                 * Порядок правил DNS:
+                 *
+                 * 1. excludePackages
+                 * 2. excludeDomains
+                 * 3. customPackages
+                 * 4. customDomains
+                 * 5. domains.srs
+                 * 6. final -> direct-dns
+                 *
+                 * Исключения должны идти первыми.
+                 */
 
 
                 rules: [],
@@ -1262,11 +1278,6 @@ function generateConfig() {
 
                 independent_cache:
                     true,
-
-
-                /* =============================================
-                   DEFAULT = DIRECT DNS
-                ============================================= */
 
 
                 final:
@@ -1290,20 +1301,18 @@ function generateConfig() {
 
 
             /* =================================================
-               OUTBOUND
+               OUTBOUNDS
             ================================================= */
 
 
             outbounds: [
 
                 {
-
                     type:
                         "direct",
 
                     tag:
                         "direct"
-
                 }
 
             ],
@@ -1318,9 +1327,9 @@ function generateConfig() {
             route: {
 
 
-                /* =============================================
+                /* ---------------------------------------------
                    REMOTE RULE-SET
-                ============================================= */
+                --------------------------------------------- */
 
 
                 rule_set: [
@@ -1340,68 +1349,55 @@ function generateConfig() {
                             remoteUrl,
 
                         update_interval:
-                            updateInterval
+                            updateInterval,
 
-                    }
-
-                ],
-
-
-
-                /* =============================================
-                   ROUTE RULES
-                ============================================= */
-
-
-                rules: [
-
-
-                    /* -----------------------------------------
-                       DNS HIJACK
-                    ----------------------------------------- */
-
-
-                    {
-
-                        protocol:
-                            "dns",
-
-                        action:
-                            "hijack-dns"
-
-                    },
-
-
-                    /* -----------------------------------------
-                       SNI / HTTP HOST SNIFFING
-                    ----------------------------------------- */
-
-
-                    {
-
-                        action:
-                            "sniff"
-
-                    },
-
-
-                    /* -----------------------------------------
-                       PRIVATE IP → DIRECT
-                    ----------------------------------------- */
-
-
-                    {
-
-                        ip_is_private:
-                            true,
-
-                        outbound:
+                        download_detour:
                             "direct"
 
                     }
 
                 ],
 
+
+
+                /* ---------------------------------------------
+                   ROUTING
+                --------------------------------------------- */
+
+
+                rules: [
+
+
+                    /*
+                     * Определяем протоколы.
+                     */
+
+                    {
+                        action:
+                            "sniff"
+                    },
+
+
+                    /*
+                     * Перехватываем DNS-запросы,
+                     * поступающие через TUN.
+                     */
+
+                    {
+                        protocol:
+                            "dns",
+
+                        action:
+                            "hijack-dns"
+                    }
+
+                ],
+
+
+                /*
+                 * DNS resolver для разрешения hostname
+                 * самих DNS-серверов и Remote Rule-Set.
+                 */
 
                 default_domain_resolver:
                     "bootstrap",
@@ -1410,6 +1406,11 @@ function generateConfig() {
                 auto_detect_interface:
                     true,
 
+
+                /*
+                 * Весь обычный трафик не перенаправляется
+                 * отдельным outbound-маршрутом.
+                 */
 
                 final:
                     "direct"
@@ -1421,42 +1422,8 @@ function generateConfig() {
 
 
         /* ====================================================
-           DNS RULE ORDER
-        ==================================================== */
-
-
-        /*
-         * ВАЖНО:
-         *
-         * DNS rules обрабатываются сверху вниз.
-         *
-         * Приоритет:
-         *
-         * 1. Исключённые приложения → Direct
-         * 2. Исключённые домены → Direct
-         * 3. Пользовательские приложения → Redirect
-         * 4. Пользовательские домены → Redirect
-         * 5. domains.srs → Redirect
-         * 6. final → Direct
-         *
-         *
-         * Таким образом:
-         *
-         * Вся система = Direct DNS
-         *
-         * Выбранные приложения = Redirect DNS
-         *
-         * Выбранные домены = Redirect DNS
-         *
-         * domains.srs = Redirect DNS
-         *
-         * Исключения = Direct DNS
-         */
-
-
-
-        /* ====================================================
-           EXCLUDED APPS → DIRECT DNS
+           DNS RULE 1
+           EXCLUDED APPLICATIONS → LOCAL DNS
         ==================================================== */
 
 
@@ -1470,7 +1437,7 @@ function generateConfig() {
                     excludePackages,
 
                 server:
-                    "direct-dns"
+                    "local"
 
             });
 
@@ -1479,7 +1446,8 @@ function generateConfig() {
 
 
         /* ====================================================
-           EXCLUDED DOMAINS → DIRECT DNS
+           DNS RULE 2
+           EXCLUDED DOMAINS → LOCAL DNS
         ==================================================== */
 
 
@@ -1493,7 +1461,7 @@ function generateConfig() {
                     excludeDomains,
 
                 server:
-                    "direct-dns"
+                    "local"
 
             });
 
@@ -1502,7 +1470,8 @@ function generateConfig() {
 
 
         /* ====================================================
-           CUSTOM APPS → REDIRECT DNS
+           DNS RULE 3
+           SELECTED APPLICATIONS → REDIRECT DNS
         ==================================================== */
 
 
@@ -1525,7 +1494,8 @@ function generateConfig() {
 
 
         /* ====================================================
-           CUSTOM DOMAINS → REDIRECT DNS
+           DNS RULE 4
+           SELECTED DOMAINS → REDIRECT DNS
         ==================================================== */
 
 
@@ -1548,6 +1518,7 @@ function generateConfig() {
 
 
         /* ====================================================
+           DNS RULE 5
            REMOTE RULE-SET → REDIRECT DNS
         ==================================================== */
 
@@ -1561,6 +1532,17 @@ function generateConfig() {
                 "redirect-dns"
 
         });
+
+
+
+        /* ====================================================
+           DNS RULE 6
+           EVERYTHING ELSE → DIRECT DNS
+        ==================================================== */
+
+
+        config.dns.final =
+            "direct-dns";
 
 
 
@@ -1654,15 +1636,19 @@ function generateConfig() {
 
             "Конфигурация успешно создана.\n\n" +
 
-            "Режим DNS:\n" +
+            "АРХИТЕКТУРА DNS:\n\n" +
 
-            "Вся система → Direct DNS\n" +
+            "1. Исключённые приложения → local DNS\n" +
 
-            "Выбранные приложения → Redirect DNS\n" +
+            "2. Исключённые домены → local DNS\n" +
 
-            "Выбранные домены → Redirect DNS\n" +
+            "3. Выбранные приложения → Redirect DNS\n" +
 
-            "domains.srs → Redirect DNS\n\n" +
+            "4. Выбранные домены → Redirect DNS\n" +
+
+            "5. domains.srs → Redirect DNS\n" +
+
+            "6. Всё остальное → Direct DNS\n\n" +
 
             "Redirect DNS:\n" +
 
