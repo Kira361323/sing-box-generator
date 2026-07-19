@@ -6,7 +6,7 @@ on:
       config_dir:
         description: 'Директория с JSON-профилями для проверки'
         required: false
-        default: './configs'
+        default: '.configs'
 
 jobs:
   validate-profiles:
