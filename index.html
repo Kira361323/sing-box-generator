@@ -120,18 +120,21 @@ button:hover { background: #94e28f; }
     display: flex;
     align-items: center;
     gap: 6px;
-    font-weight: 400;
+    font-weight: 600;
+    font-size: 0.9em;
     cursor: pointer;
     padding: 8px 14px;
     border: 1px solid var(--border);
     border-radius: 6px;
     transition: all 0.2s;
 }
-.mode-toggle input[type="radio"] { width: auto; margin: 0; }
-.mode-toggle input[type="radio"]:checked + span { color: var(--accent); }
+.mode-toggle input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
 .mode-toggle label:has(input:checked) {
     border-color: var(--accent);
-    background: rgba(137, 180, 250, 0.08);
+    background: rgba(137, 180, 250, 0.1);
 }
 @media (max-width: 600px) {
     .grid { grid-template-columns: 1fr; }
@@ -170,35 +173,50 @@ button:hover { background: #94e28f; }
             </select>
         </div>
     </div>
+
+    <label for="bootstrapSelect">Bootstrap DNS (резолвит адреса DoH/DoT):</label>
+    <select id="bootstrapSelect">
+        <option value="8.8.8.8" selected>Google Primary (8.8.8.8)</option>
+        <option value="8.8.4.4">Google Secondary (8.8.4.4)</option>
+        <option value="1.1.1.1">Cloudflare Primary (1.1.1.1)</option>
+        <option value="1.0.0.1">Cloudflare Secondary (1.0.0.1)</option>
+        <option value="9.9.9.9">Quad9 Primary (9.9.9.9)</option>
+        <option value="149.112.112.112">Quad9 Secondary (149.112.112.112)</option>
+        <option value="77.88.8.8">Яндекс Primary (77.88.8.8)</option>
+        <option value="77.88.8.1">Яндекс Secondary (77.88.8.1)</option>
+    </select>
+    <div class="note">
+        Используется для резолва доменных имён DoH/DoT-серверов. Выберите IP, доступный в вашей сети. При недоступности bootstrap — DNS-профиль не работает.
+    </div>
+
     <label for="remoteUrl">Remote Rule-Set URL:</label>
     <input id="remoteUrl" type="url" value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
     <div class="note">
-        Приложения исключаются напрямую из TUN-интерфейса (bypassing VPN).
-        Удаленный Rule-Set загружается с параметром <code>download_detour: "direct"</code>.
+        Приложения исключаются напрямую из TUN-интерфейса (bypassing VPN). Удаленный Rule-Set загружается с параметром <code>download_detour: "direct"</code>.
     </div>
 </div>
 
-<!-- MODE SELECTION -->
+<!-- MODE TOGGLE -->
 <div class="section">
-    <h2>Режим DNS</h2>
+    <h2>Режим работы</h2>
     <div class="mode-toggle">
         <label>
             <input type="radio" name="dnsMode" value="fixed" checked>
-            <span>Фиксированный (один Redirect + один Direct)</span>
+            Фиксированный (один Redirect + один Direct)
         </label>
         <label>
             <input type="radio" name="dnsMode" value="fallback">
-            <span>Fallback (все DNS категории, failover по порядку)</span>
+            Fallback (все DNS, автопереключение при таймауте)
         </label>
     </div>
     <div class="note">
-        <strong>Фиксированный</strong> — один выбранный DNS на каждую роль.<br>
-        <strong>Fallback</strong> — все DNS категории в конфиге; sing-box перебирает их при таймауте (первый доступный побеждает).
+        <strong>Фиксированный:</strong> вы выбираете конкретный Redirect и Direct DNS.<br>
+        <strong>Fallback:</strong> все DNS из списка добавляются в конфиг. sing-box использует первый доступный, при таймауте переключается на следующий. Порядок = приоритет.
     </div>
 </div>
 
-<!-- DNS SERVERS -->
-<div class="section" id="dnsSelectSection">
+<!-- DNS SERVERS (fixed mode) -->
+<div class="section" id="fixedDnsSection">
     <h2>Выбор DNS-серверов</h2>
     <div class="grid">
         <div>
@@ -245,7 +263,7 @@ button:hover { background: #94e28f; }
     <label for="excludePackages">Package name → Исключение из TUN (Bypass VPN):</label>
     <textarea id="excludePackages" rows="3"></textarea>
     <div class="note">
-        Исключённые домены маршрутизируются через выбранный Direct DNS (зашифрованный).<br>
+        Исключённые домены маршрутизируются через выбранный Direct DNS (зашифрованный DoH/DoT), а не через DNS оператора.<br>
         Указанные приложения добавляются в <code>inbounds.exclude_package</code> и полностью минуют VPN-туннель.
     </div>
 </div>
@@ -273,7 +291,7 @@ const DEFAULT_REDIRECT_PACKAGES = [
 
 const REDIRECT_DNS = [
     { name: "Xbox DNS (DoT) [xbox-dns.ru]", url: "xbox-dns.ru", type: "tls", tag: "xbox-dot" },
-    { name: "Xbox DNS (DoH) [https://xbox-xbox-dns.ru/dns-query]", url: "https://xbox-dns.ru/dns-query", type: "https", tag: "xbox-doh" },
+    { name: "Xbox DNS (DoH) [https://xbox-dns.ru/dns-query]", url: "https://xbox-dns.ru/dns-query", type: "https", tag: "xbox-doh" },
     { name: "Comss DNS (DoT) [dns.comss.one]", url: "dns.comss.one", type: "tls", tag: "comss-dot" },
     { name: "Comss DNS (DoH) [https://dns.comss.one/dns-query]", url: "https://dns.comss.one/dns-query", type: "https", tag: "comss-doh" },
     { name: "Shecan (DoT) [free.shecan.ir]", url: "free.shecan.ir", type: "tls", tag: "shecan-dot" },
@@ -348,17 +366,14 @@ function handleCustomSelect(selectId, boxId) {
     const select = document.getElementById(selectId);
     const box = document.getElementById(boxId);
     select.addEventListener("change", () => {
-        box.style.display = select.value === "custom" ? "block" : "none";
+        box.style.display = (select.value === "custom") ? "block" : "none";
     });
 }
 
-function getMode() {
-    return document.querySelector('input[name="dnsMode"]:checked').value;
-}
-
-function toggleDnsSection() {
-    const section = document.getElementById("dnsSelectSection");
-    section.style.display = getMode() === "fixed" ? "block" : "none";
+function handleModeToggle() {
+    const mode = document.querySelector('input[name="dnsMode"]:checked').value;
+    const fixedSection = document.getElementById("fixedDnsSection");
+    fixedSection.style.display = (mode === "fixed") ? "block" : "none";
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -366,13 +381,13 @@ window.addEventListener("DOMContentLoaded", () => {
     fillSelect("directSelect", DIRECT_DNS);
     handleCustomSelect("redirectSelect", "redirectCustomBox");
     handleCustomSelect("directSelect", "directCustomBox");
-    toggleDnsSection();
-    document.querySelectorAll('input[name="dnsMode"]').forEach(r => {
-        r.addEventListener("change", toggleDnsSection);
+    handleModeToggle();
+    document.querySelectorAll('input[name="dnsMode"]').forEach(radio => {
+        radio.addEventListener("change", handleModeToggle);
     });
 });
 
-// --- Parsers ---
+// --- Parsing ---
 
 function parseInput(id) {
     const value = document.getElementById(id).value.trim();
@@ -390,6 +405,7 @@ function parseDnsSelection(selectId, inputId, defaultTag) {
         let cleanServer = customUrl;
         if (customUrl.startsWith("https://")) {
             type = "https";
+            cleanServer = customUrl;
         } else if (customUrl.startsWith("tls://")) {
             type = "tls";
             cleanServer = customUrl.replace("tls://", "");
@@ -402,178 +418,16 @@ function parseDnsSelection(selectId, inputId, defaultTag) {
     return JSON.parse(val);
 }
 
-// --- Config Builders ---
-
-function buildFixedConfig(redirectObj, directObj, ruleSetTag, remoteUrl, updateInterval, logLevel, allRedirectPackages, customDomains, excludeDomains, excludePackages) {
-    const servers = [
-        { type: "udp", tag: "bootstrap", server: "8.8.8.8" },
-        { type: redirectObj.type, tag: redirectObj.tag, server: redirectObj.url, domain_resolver: "bootstrap" },
-        { type: directObj.type, tag: directObj.tag, server: directObj.url, domain_resolver: "bootstrap" }
-    ];
-
-    const tunInbound = {
-        type: "tun",
-        tag: "tun-in",
-        interface_name: "tun0",
-        address: ["172.19.0.1/30"],
-        auto_route: true,
-        strict_route: true,
-        stack: "gvisor",
-        mtu: 1400
-    };
-    if (excludePackages.length > 0) {
-        tunInbound.exclude_package = excludePackages;
-    }
-
-    const dnsRules = [];
-
-    // Исключения → Direct DNS (не local!)
-    if (excludeDomains.length > 0) {
-        dnsRules.push({ domain_suffix: excludeDomains, server: directObj.tag });
-    }
-
-    if (allRedirectPackages.length > 0) {
-        dnsRules.push({ package_name: allRedirectPackages, server: redirectObj.tag });
-    }
-
-    if (customDomains.length > 0) {
-        dnsRules.push({ domain_suffix: customDomains, server: redirectObj.tag });
-    }
-
-    dnsRules.push({ rule_set: ruleSetTag, server: redirectObj.tag });
-
-    return {
-        log: { level: logLevel, timestamp: true },
-        dns: {
-            servers: servers,
-            rules: dnsRules,
-            final: directObj.tag,
-            strategy: "prefer_ipv4",
-            independent_cache: true
-        },
-        inbounds: [tunInbound],
-        outbounds: [{ type: "direct", tag: "direct" }],
-        route: {
-            rule_set: [{
-                type: "remote",
-                tag: ruleSetTag,
-                format: "binary",
-                url: remoteUrl,
-                update_interval: updateInterval,
-                download_detour: "direct"
-            }],
-            rules: [
-                { action: "sniff" },
-                { protocol: "dns", action: "hijack-dns" },
-                { ip_is_private: true, outbound: "direct" }
-            ],
-            default_domain_resolver: "bootstrap",
-            auto_detect_interface: true,
-            final: "direct"
-        }
-    };
-}
-
-function buildFallbackConfig(ruleSetTag, remoteUrl, updateInterval, logLevel, allRedirectPackages, customDomains, excludeDomains, excludePackages) {
-    const servers = [
-        { type: "udp", tag: "bootstrap", server: "8.8.8.8" }
-    ];
-
-    // Все Redirect DNS
-    REDIRECT_DNS.forEach(dns => {
-        servers.push({
-            type: dns.type,
-            tag: dns.tag,
-            server: dns.url,
-            domain_resolver: "bootstrap"
-        });
-    });
-
-    // Все Direct DNS
-    DIRECT_DNS.forEach(dns => {
-        servers.push({
-            type: dns.type,
-            tag: dns.tag,
-            server: dns.url,
-            domain_resolver: "bootstrap"
-        });
-    });
-
-    const firstRedirectTag = REDIRECT_DNS[0].tag;
-    const firstDirectTag = DIRECT_DNS[0].tag;
-
-    const tunInbound = {
-        type: "tun",
-        tag: "tun-in",
-        interface_name: "tun0",
-        address: ["172.19.0.1/30"],
-        auto_route: true,
-        strict_route: true,
-        stack: "gvisor",
-        mtu: 1400
-    };
-    if (excludePackages.length > 0) {
-        tunInbound.exclude_package = excludePackages;
-    }
-
-    const dnsRules = [];
-
-    // Исключения → первый Direct DNS
-    if (excludeDomains.length > 0) {
-        dnsRules.push({ domain_suffix: excludeDomains, server: firstDirectTag });
-    }
-
-    if (allRedirectPackages.length > 0) {
-        dnsRules.push({ package_name: allRedirectPackages, server: firstRedirectTag });
-    }
-
-    if (customDomains.length > 0) {
-        dnsRules.push({ domain_suffix: customDomains, server: firstRedirectTag });
-    }
-
-    dnsRules.push({ rule_set: ruleSetTag, server: firstRedirectTag });
-
-    return {
-        log: { level: logLevel, timestamp: true },
-        dns: {
-            servers: servers,
-            rules: dnsRules,
-            final: firstDirectTag,
-            strategy: "prefer_ipv4",
-            independent_cache: true
-        },
-        inbounds: [tunInbound],
-        outbounds: [{ type: "direct", tag: "direct" }],
-        route: {
-            rule_set: [{
-                type: "remote",
-                tag: ruleSetTag,
-                format: "binary",
-                url: remoteUrl,
-                update_interval: updateInterval,
-                download_detour: "direct"
-            }],
-            rules: [
-                { action: "sniff" },
-                { protocol: "dns", action: "hijack-dns" },
-                { ip_is_private: true, outbound: "direct" }
-            ],
-            default_domain_resolver: "bootstrap",
-            auto_detect_interface: true,
-            final: "direct"
-        }
-    };
-}
-
-// --- Main Generator ---
+// --- Config Generation ---
 
 function generateConfig() {
     const status = document.getElementById("status");
     try {
+        const mode = document.querySelector('input[name="dnsMode"]:checked').value;
+        const bootstrapIp = document.getElementById("bootstrapSelect").value;
         const remoteUrl = document.getElementById("remoteUrl").value.trim();
         const updateInterval = document.getElementById("updateInterval").value;
         const logLevel = document.getElementById("logLevelSelect").value;
-        const mode = getMode();
 
         if (!remoteUrl) throw new Error("Remote Rule-Set URL не указан.");
 
@@ -587,47 +441,141 @@ function generateConfig() {
         const excludeDomains = parseInput("excludeDomains");
         const excludePackages = parseInput("excludePackages");
 
-        let config;
-        let statusMsg;
+        let servers = [];
+        let redirectTag = "";
+        let directTag = "";
+        let redirectInfo = "";
+        let directInfo = "";
 
         if (mode === "fixed") {
             const redirectObj = parseDnsSelection("redirectSelect", "redirectCustomUrl", "redirect-dns");
             const directObj = parseDnsSelection("directSelect", "directCustomUrl", "direct-dns");
-            config = buildFixedConfig(redirectObj, directObj, ruleSetTag, remoteUrl, updateInterval, logLevel, allRedirectPackages, customDomains, excludeDomains, excludePackages);
-            statusMsg =
-                "Конфигурация создана! [Режим: Фиксированный]\\n\\n" +
-                `Redirect DNS -> ${redirectObj.tag} [${redirectObj.type}] (${redirectObj.url})\\n` +
-                `Direct DNS   -> ${directObj.tag} [${directObj.type}] (${directObj.url})\\n` +
-                `Rule-Set Tag -> ${ruleSetTag}\\n\\n` +
-                `Redirect приложений: ${allRedirectPackages.length}\\n` +
-                `Исключено приложений (TUN Bypass): ${excludePackages.length}\\n` +
-                `Исключено доменов (→ Direct DNS): ${excludeDomains.length}`;
+
+            redirectTag = redirectObj.tag;
+            directTag = directObj.tag;
+            redirectInfo = `${redirectObj.tag} [${redirectObj.type}] (${redirectObj.url})`;
+            directInfo = `${directObj.tag} [${directObj.type}] (${directObj.url})`;
+
+            servers = [
+                { type: "udp", tag: "bootstrap", server: bootstrapIp },
+                { type: redirectObj.type, tag: redirectObj.tag, server: redirectObj.url, domain_resolver: "bootstrap" },
+                { type: directObj.type, tag: directObj.tag, server: directObj.url, domain_resolver: "bootstrap" }
+            ];
         } else {
-            config = buildFallbackConfig(ruleSetTag, remoteUrl, updateInterval, logLevel, allRedirectPackages, customDomains, excludeDomains, excludePackages);
-            statusMsg =
-                "Конфигурация создана! [Режим: Fallback]\\n\\n" +
-                `Redirect DNS: ${REDIRECT_DNS.length} серверов (failover по порядку)\\n` +
-                `Direct DNS:   ${DIRECT_DNS.length} серверов (failover по порядку)\\n` +
-                `Первый Redirect -> ${REDIRECT_DNS[0].tag}\\n` +
-                `Первый Direct   -> ${DIRECT_DNS[0].tag}\\n` +
-                `Rule-Set Tag    -> ${ruleSetTag}\\n\\n` +
-                `Redirect приложений: ${allRedirectPackages.length}\\n` +
-                `Исключено приложений (TUN Bypass): ${excludePackages.length}\\n` +
-                `Исключено доменов (→ Direct DNS): ${excludeDomains.length}`;
+            // Fallback mode: all DNS servers
+            servers = [{ type: "udp", tag: "bootstrap", server: bootstrapIp }];
+
+            REDIRECT_DNS.forEach(dns => {
+                servers.push({ type: dns.type, tag: dns.tag, server: dns.url, domain_resolver: "bootstrap" });
+            });
+            DIRECT_DNS.forEach(dns => {
+                servers.push({ type: dns.type, tag: dns.tag, server: dns.url, domain_resolver: "bootstrap" });
+            });
+
+            redirectTag = REDIRECT_DNS[0].tag;
+            directTag = DIRECT_DNS[0].tag;
+            redirectInfo = `Fallback: ${REDIRECT_DNS.length} серверов (первый: ${REDIRECT_DNS[0].tag})`;
+            directInfo = `Fallback: ${DIRECT_DNS.length} серверов (первый: ${DIRECT_DNS[0].tag})`;
         }
 
+        // TUN inbound
+        const tunInbound = {
+            type: "tun",
+            tag: "tun-in",
+            interface_name: "tun0",
+            address: ["172.19.0.1/30"],
+            auto_route: true,
+            strict_route: true,
+            stack: "gvisor",
+            mtu: 1400
+        };
+        if (excludePackages.length > 0) {
+            tunInbound.exclude_package = excludePackages;
+        }
+
+        // Main config
+        const config = {
+            log: { level: logLevel, timestamp: true },
+            dns: {
+                servers: servers,
+                rules: [],
+                final: directTag,
+                strategy: "prefer_ipv4",
+                independent_cache: true
+            },
+            inbounds: [tunInbound],
+            outbounds: [{ type: "direct", tag: "direct" }],
+            route: {
+                rule_set: [{
+                    type: "remote",
+                    tag: ruleSetTag,
+                    format: "binary",
+                    url: remoteUrl,
+                    update_interval: updateInterval,
+                    download_detour: "direct"
+                }],
+                rules: [
+                    { action: "sniff" },
+                    { protocol: "dns", action: "hijack-dns" },
+                    { ip_is_private: true, outbound: "direct" }
+                ],
+                default_domain_resolver: "bootstrap",
+                auto_detect_interface: true,
+                final: "direct"
+            }
+        };
+
+        // DNS rules: excludeDomains → Direct DNS (НЕ local!)
+        if (excludeDomains.length > 0) {
+            config.dns.rules.push({
+                domain_suffix: excludeDomains,
+                server: directTag
+            });
+        }
+
+        if (allRedirectPackages.length > 0) {
+            config.dns.rules.push({
+                package_name: allRedirectPackages,
+                server: redirectTag
+            });
+        }
+
+        if (customDomains.length > 0) {
+            config.dns.rules.push({
+                domain_suffix: customDomains,
+                server: redirectTag
+            });
+        }
+
+        config.dns.rules.push({
+            rule_set: ruleSetTag,
+            server: redirectTag
+        });
+
+        // Download
         const json = JSON.stringify(config, null, 2);
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = mode === "fixed" ? "singbox_fixed.json" : "singbox_fallback.json";
+        link.download = (mode === "fixed") ? "singbox_fixed.json" : "singbox_fallback.json";
         document.body.appendChild(link);
         link.click();
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-        status.textContent = statusMsg;
+        // Status
+        status.textContent =
+            `Конфигурация создана! [${mode === "fixed" ? "Фиксированный" : "Fallback"}]\\n\\n` +
+            `Bootstrap    -> ${bootstrapIp}\\n` +
+            `Redirect DNS -> ${redirectInfo}\\n` +
+            `Direct DNS   -> ${directInfo}\\n` +
+            `Rule-Set Tag -> ${ruleSetTag}\\n\\n` +
+            `Redirect приложений (по умолчанию + свои): ${allRedirectPackages.length}\\n` +
+            `Исключено приложений (TUN Bypass): ${excludePackages.length}\\n` +
+            `Исключено доменов (→ Direct DNS): ${excludeDomains.length}\\n` +
+            `Всего DNS-серверов в конфиге: ${servers.length}`;
+
     } catch (error) {
         status.textContent = "Ошибка генерации:\\n\\n" + error.message;
     }
