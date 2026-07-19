@@ -3,9 +3,9 @@
 Генератор DNS-профилей для [sing-box](https://github.com/SagerNet/sing-box) ≥ 1.11.
 Работает полностью в браузере — без бэкенда, без сбора данных.
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-89b4fa?style=for-the-badge&logo=github)](https://Kira361323.github.io/Dns-rules/)
-[![DNS Test](https://img.shields.io/badge/DNS_Test-Workflow-a6e3a1?style=for-the-badge&logo=githubactions)](https://github.com/Kira361323/Dns-rules/actions/workflows/dns-test.yml)
-[![License](https://img.shields.io/badge/License-MIT-f9e2af?style=for-the-badge)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-89b4fa?style=for-the-badge&logo=github)](https://kira361323.github.io/sing-box-generator/)
+[![DNS Test](https://img.shields.io/badge/DNS_Test-Workflow-a6e3a1?style=for-the-badge&logo=githubactions)](https://github.com/Kira361323/sing-box-generator/actions/workflows/dns-test.yml)
+[![License](https://img.shields.io/badge/License-MIT-f9e2af?style=for-the-badge)](https://github.com/Kira361323/sing-box-generator/blob/main/LICENSE)
 
 ---
 
