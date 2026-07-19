@@ -1,0 +1,181 @@
+name: DNS Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_domain:
+        description: "Домен для тестирования"
+        required: false
+        default: "google.com"
+      timeout:
+        description: "Таймаут (сек)"
+        required: false
+        default: "5"
+
+jobs:
+  dns-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dnsutils curl jq > /dev/null 2>&1
+
+      - name: Run DNS tests
+        id: test
+        env:
+          DOMAIN: ${{ inputs.test_domain }}
+          TIMEOUT: ${{ inputs.timeout }}
+        run: |
+          RESULTS_FILE="dns-results.md"
+          echo "# DNS Test Results" > "$RESULTS_FILE"
+          echo "" >> "$RESULTS_FILE"
+          echo "**Domain:** \`$DOMAIN\` | **Timeout:** ${TIMEOUT}s | **Date:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> "$RESULTS_FILE"
+          echo "" >> "$RESULTS_FILE"
+
+          # ── Bootstrap (UDP) ──
+          echo "## Bootstrap (UDP :53)" >> "$RESULTS_FILE"
+          echo "" >> "$RESULTS_FILE"
+          echo "| IP | Статус | Время | IP-ответ |" >> "$RESULTS_FILE"
+          echo "|----|--------|-------|----------|" >> "$RESULTS_FILE"
+
+          BOOTSTRAP_IPS=("8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" "9.9.9.9" "149.112.112.112" "77.88.8.8" "77.88.8.1")
+          for ip in "${BOOTSTRAP_IPS[@]}"; do
+            START=$(date +%s%N)
+            ANSWER=$(dig @"$ip" "$DOMAIN" A +short +time="$TIMEOUT" +tries=1 2>/dev/null | head -1)
+            END=$(date +%s%N)
+            MS=$(( (END - START) / 1000000 ))
+            if [ -n "$ANSWER" ]; then
+              echo "| $ip | ✅ OK | ${MS}ms | $ANSWER |" >> "$RESULTS_FILE"
+            else
+              echo "| $ip | ❌ FAIL | — | — |" >> "$RESULTS_FILE"
+            fi
+          done
+          echo "" >> "$RESULTS_FILE"
+
+          # ── DoT (TCP :853) ──
+          echo "## DoT (TCP :853)" >> "$RESULTS_FILE"
+          echo "" >> "$RESULTS_FILE"
+          echo "| Сервер | Host | Статус | Время |" >> "$RESULTS_FILE"
+          echo "|--------|------|--------|-------|" >> "$RESULTS_FILE"
+
+          DOT_SERVERS=(
+            "Astracat|dns.astracat.ru"
+            "Comss|dns.comss.one"
+            "Geohide|dns.geohide.ru"
+            "Mafioznik|dns.mafioznik.xyz"
+            "Malw Link|dns.malw.link"
+            "Shecan|free.shecan.ir"
+            "Xbox DNS|xbox-dns.ru"
+            "AliDNS|dns.alidns.com"
+            "Applied Privacy|dot1.applied-privacy.net"
+            "BebasID|dns.bebasid.com"
+            "Cloudflare|one.one.one.one"
+            "DNS.SB|dot.sb"
+            "DNSForge|dnsforge.de"
+            "DNSPod|dot.pub"
+            "Google|dns.google"
+            "HaGeZi Juuri|juuri.hagezi.org"
+            "HaGeZi Root|root.hagezi.org"
+            "HaGeZi Wurzn|wurzn.hagezi.org"
+            "JoinDNS4|noads.joindns4.eu"
+            "LibreDNS|dot.libredns.gr"
+            "Mullvad|adblock.dns.mullvad.net"
+            "OpenBLD|ada.openbld.net"
+            "Quad9|dns.quad9.net"
+            "Quad9 ECS|dns11.quad9.net"
+            "Digitale Ges.|dns.digitale-gesellschaft.ch"
+            "Tiarap|dot.tiar.app"
+          )
+
+          for entry in "${DOT_SERVERS[@]}"; do
+            IFS='|' read -r name host <<< "$entry"
+            START=$(date +%s%N)
+            ANSWER=$(dig @"$host" "$DOMAIN" A +tls +short +time="$TIMEOUT" +tries=1 2>/dev/null | head -1)
+            END=$(date +%s%N)
+            MS=$(( (END - START) / 1000000 ))
+            if [ -n "$ANSWER" ]; then
+              echo "| $name | $host | ✅ OK | ${MS}ms |" >> "$RESULTS_FILE"
+            else
+              echo "| $name | $host | ❌ FAIL | — |" >> "$RESULTS_FILE"
+            fi
+          done
+          echo "" >> "$RESULTS_FILE"
+
+          # ── DoH (HTTPS :443) ──
+          echo "## DoH (HTTPS :443)" >> "$RESULTS_FILE"
+          echo "" >> "$RESULTS_FILE"
+          echo "| Сервер | URL | Статус | Время | IP-ответ |" >> "$RESULTS_FILE"
+          echo "|--------|-----|--------|-------|----------|" >> "$RESULTS_FILE"
+
+          DOH_SERVERS=(
+            "Astracat|https://dns.astracat.ru/dns-query"
+            "Comss|https://dns.comss.one/dns-query"
+            "Geohide|https://dns.geohide.ru:444/dns-query"
+            "Mafioznik|https://dns.mafioznik.xyz/dns-query"
+            "Malw Link|https://dns.malw.link/dns-query"
+            "Xbox DNS|https://xbox-dns.ru/dns-query"
+            "AliDNS|https://dns.alidns.com/dns-query"
+            "Applied Privacy|https://doh.applied-privacy.net/query"
+            "BebasID|https://dns.bebasid.com/dns-query"
+            "BebasID OISD|https://dns.bebasid.com/dns-oisd"
+            "BebasID HaGeZi|https://dns.bebasid.com/dns-hagezi"
+            "Cloudflare|https://dns.cloudflare.com/dns-query"
+            "DNS.SB|https://doh.dns.sb/dns-query"
+            "DNSForge|https://dnsforge.de/dns-query"
+            "DNSPod|https://dns.pub/dns-query"
+            "Google|https://dns.google/dns-query"
+            "HaGeZi Juuri|https://juuri.hagezi.org/dns-query"
+            "HaGeZi Root|https://root.hagezi.org/dns-query"
+            "HaGeZi Wurzn|https://wurzn.hagezi.org/dns-query"
+            "JoinDNS4|https://noads.joindns4.eu/dns-query"
+            "LibreDNS|https://doh.libredns.gr/dns-query"
+            "LibreDNS Ads|https://doh.libredns.gr/ads"
+            "Mullvad|https://adblock.dns.mullvad.net/dns-query"
+            "OpenBLD|https://ada.openbld.net/dns-query"
+            "Quad9|https://dns.quad9.net/dns-query"
+            "Quad9 ECS|https://dns11.quad9.net/dns-query"
+            "Digitale Ges.|https://dns.digitale-gesellschaft.ch/dns-query"
+            "Tiarap Org|https://doh.tiarap.org/dns-query"
+            "Tiarap App|https://doh.tiar.app/dns-query"
+          )
+
+          for entry in "${DOH_SERVERS[@]}"; do
+            IFS='|' read -r name url <<< "$entry"
+            START=$(date +%s%N)
+            RESP=$(curl -s --max-time "$TIMEOUT" \
+              -H "Accept: application/dns-json" \
+              "${url}?name=${DOMAIN}&type=A" 2>/dev/null)
+            END=$(date +%s%N)
+            MS=$(( (END - START) / 1000000 ))
+            IP=$(echo "$RESP" | jq -r '.Answer[]? | select(.type==1) | .data' 2>/dev/null | head -1)
+            if [ -n "$IP" ]; then
+              echo "| $name | $url | ✅ OK | ${MS}ms | $IP |" >> "$RESULTS_FILE"
+            elif [ -n "$RESP" ]; then
+              echo "| $name | $url | ⚠️ WARN | ${MS}ms | нет A-записи |" >> "$RESULTS_FILE"
+            else
+              echo "| $name | $url | ❌ FAIL | — | — |" >> "$RESULTS_FILE"
+            fi
+          done
+          echo "" >> "$RESULTS_FILE"
+
+          # ── Summary ──
+          OK_COUNT=$(grep -c "✅" "$RESULTS_FILE" || true)
+          FAIL_COUNT=$(grep -c "❌" "$RESULTS_FILE" || true)
+          WARN_COUNT=$(grep -c "⚠️" "$RESULTS_FILE" || true)
+          echo "---" >> "$RESULTS_FILE"
+          echo "**Итого:** ✅ $OK_COUNT OK | ⚠️ $WARN_COUNT WARN | ❌ $FAIL_COUNT FAIL" >> "$RESULTS_FILE"
+
+          echo "results_file=$RESULTS_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Print results
+        run: cat dns-results.md
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-test-results
+          path: dns-results.md
+          retention-days: 30
