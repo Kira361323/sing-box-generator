@@ -57,3 +57,20 @@ jobs:
           done
           echo "------------------------------------------------"
           echo "=== Все профили успешно прошли проверку! ==="
+
+      - name: Smoke Test (Background Run)
+        run: |
+          for config in $(find ./configs -type f -name "*.json"); do
+            echo "Запуск дымового теста для: $config"
+            # Запускаем в фоне, ждем 5 секунд, проверяем, жив ли процесс
+            sing-box run -c "$config" > /dev/null 2>&1 &
+            PID=$!
+            sleep 5
+            if ps -p $PID > /dev/null; then
+              echo "✔ [OK] Процесс инициализировался успешно."
+              kill $PID
+            else
+              echo "✖ [FAIL] Процесс упал при инициализации!"
+              exit 1
+            fi
+          done
