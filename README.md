@@ -30,7 +30,7 @@
 
 ### Онлайн (GitHub Pages)
 
-1. Откройте **[конфигуратор](https://Kira361323.github.io/Dns-rules/)**
+1. Откройте **[конфигуратор](https://kira361323.github.io/sing-box-generator/)**
 2. Выберите **Bootstrap DNS** (проверьте доступность: `dig @IP xbox-dns.ru`)
 3. Выберите **Redirect DNS** и **Direct DNS**
 4. При необходимости добавьте свои домены / приложения / исключения
