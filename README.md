@@ -1,476 +1,191 @@
-# [Sing-Box DNS Configurator](https://kira361323.github.io/sing-box-generator/)
+# 🛡️ [Sing-Box DNS Configurator](https://kira361323.github.io/sing-box-generator/)
 
-Веб-конфигуратор для генерации конфигураций **sing-box** с управлением DNS-маршрутизацией по приложениям, доменам и удалённому `Rule-Set`.
+Генератор DNS-профилей для [sing-box](https://github.com/SagerNet/sing-box) ≥ 1.11.
+Работает полностью в браузере — без бэкенда, без сбора данных.
 
-Проект представляет собой статический сайт и может размещаться на **GitHub Pages**.
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-89b4fa?style=for-the-badge&logo=github)](https://Kira361323.github.io/Dns-rules/)
+[![DNS Test](https://img.shields.io/badge/DNS_Test-Workflow-a6e3a1?style=for-the-badge&logo=githubactions)](https://github.com/Kira361323/Dns-rules/actions/workflows/dns-test.yml)
+[![License](https://img.shields.io/badge/License-MIT-f9e2af?style=for-the-badge)](LICENSE)
 
-## Архитектура DNS
+---
 
-Конфигуратор рассчитан на следующую схему:
+## ✨ Возможности
 
-| Запрос | DNS |
-|---|---|
-| Исключённые приложения | DNS системы / провайдера / мобильного оператора |
-| Исключённые домены | DNS системы / провайдера / мобильного оператора |
-| Выбранные приложения | Redirect DNS |
-| Выбранные домены | Redirect DNS |
-| Домены из `domains.srs` | Redirect DNS |
-| Все остальные запросы | Direct DNS |
+| Функция | Описание |
+|---------|----------|
+| **Фиксированный профиль** | Один Redirect + один Direct DNS |
+| **Fallback-профиль** | Все DNS категории, перебор при таймауте |
+| **55 DNS-серверов** | 13 Redirect + 42 Direct (DoH / DoT) |
+| **Bootstrap selector** | 8 предустановленных IP + ручной ввод |
+| **Кастомный DNS** | Свой DoH / DoT / UDP сервер |
+| **Rule-Set** | Удалённый `.srs` с автообновлением |
+| **Исключения** | Домены → Direct, приложения → bypass TUN |
+| **DNS Strategy** | `ipv4_only` / `prefer_ipv4` / `prefer_ipv6` / `ipv6_only` |
+| **Логирование** | От `off` (без секции log) до `trace` |
+| **Описания** | Краткое пояснение к каждому полю |
 
-Логика:
+---
 
-```text
-DNS-запрос
-    │
-    ├── Исключённое приложение ──────► DNS системы/провайдера
-    │
-    ├── Исключённый домен ───────────► DNS системы/провайдера
-    │
-    ├── Выбранное приложение ────────► Redirect DNS
-    │
-    ├── Выбранный домен ─────────────► Redirect DNS
-    │
-    ├── domains.srs ─────────────────► Redirect DNS
-    │
-    └── Остальное ───────────────────► Direct DNS
-```
+## 🚀 Использование
 
-> Важно: DNS-маршрутизация и маршрутизация самого TCP/UDP-трафика — разные уровни. Этот конфигуратор управляет именно DNS-запросами.
+### Онлайн (GitHub Pages)
 
-## Rule-Set `domains.srs`
+1. Откройте **[конфигуратор](https://Kira361323.github.io/Dns-rules/)**
+2. Выберите **Bootstrap DNS** (проверьте доступность: `dig @IP xbox-dns.ru`)
+3. Выберите **Redirect DNS** и **Direct DNS**
+4. При необходимости добавьте свои домены / приложения / исключения
+5. Нажмите **«Скачать конфигурацию»**
+6. Импортируйте `.json` в sing-box
 
-По умолчанию используется:
-
-```text
-https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs
-```
-
-Rule-Set подключается как удалённый binary Rule-Set:
-
-```json
-{
-  "type": "remote",
-  "tag": "domains",
-  "format": "binary",
-  "url": "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs",
-  "update_interval": "24h"
-}
-```
-
-Домены, совпавшие с Rule-Set, направляются в `Redirect DNS`.
-
-## Кэш
-
-Конфигурация включает механизм кэширования sing-box:
-
-```json
-{
-  "experimental": {
-    "cache_file": {
-      "enabled": true,
-      "path": "cache.db"
-    }
-  }
-}
-```
-
-Путь к кэшу задаётся через интерфейс.
-
-Важно: `cache_file` — это встроенный механизм кэширования sing-box. Он не означает, что `domains.srs` автоматически превращается в обычный локальный файл, доступный по произвольному пути.
-
-Поэтому не следует вручную добавлять в конфигурацию:
-
-```text
-/storage/emulated/0/Android/data/.../domains.srs
-```
-
-если этот файл физически не существует.
-
-Используется именно удалённый Rule-Set:
-
-```json
-{
-  "type": "remote",
-  "format": "binary",
-  "url": "..."
-}
-```
-
-## Порядок правил
-
-Порядок правил имеет критическое значение.
-
-Рекомендуемая логика:
-
-```text
-1. Исключённые приложения
-2. Исключённые домены
-3. Пользовательские приложения → Redirect DNS
-4. Пользовательские домены → Redirect DNS
-5. domains.srs → Redirect DNS
-6. Остальные запросы → Direct DNS
-```
-
-Более специфичные правила должны обрабатываться раньше общих.
-
-## Redirect DNS
-
-В конфигуратор включены:
-
-- Xbox DNS
-- Comss DNS
-- Malw Link
-- Astracat
-- Mafioznik
-- Geohide
-
-Все серверы используются через DoH.
-
-## Direct DNS
-
-В конфигуратор включены:
-
-- AliDNS
-- BebasID Standard
-- BebasID OISD
-- BebasID HaGeZi
-- Cloudflare
-- DNS.SB
-- DNSPub
-- Google DNS
-- Mullvad Adblock
-- OpenBLD Ada
-- Quad9 Standard
-- Quad9 ECS
-- Applied Privacy
-- Digitale Gesellschaft
-- JoinDNS4 NoAds
-- LibreDNS Standard
-- LibreDNS Ads
-- DNSForge
-- HaGeZi Root
-- HaGeZi Wurzn
-- HaGeZi Juuri
-- Tiarap
-- TiarApp
-
-## Обработка DoH URL
-
-Конфигуратор разбирает URL DoH и формирует отдельные поля sing-box.
-
-Например:
-
-```text
-https://dns.alidns.com/dns-query
-```
-
-преобразуется в:
-
-```json
-{
-  "type": "https",
-  "tag": "direct-dns",
-  "server": "dns.alidns.com",
-  "server_port": 443,
-  "path": "/dns-query"
-}
-```
-
-Для нестандартного порта:
-
-```text
-https://dns.geohide.ru:444/dns-query
-```
-
-генерируется:
-
-```json
-{
-  "type": "https",
-  "tag": "redirect-dns",
-  "server": "dns.geohide.ru",
-  "server_port": 444,
-  "path": "/dns-query"
-}
-```
-
-Это предотвращает ошибку, когда полный URL ошибочно передаётся в поле `server`.
-
-Некорректная структура:
-
-```json
-{
-  "server": "https://https://dns.alidns.com/dns-query"
-}
-```
-
-может привести к ошибкам вида:
-
-```text
-invalid port
-```
-
-## Bootstrap DNS
-
-Для разрешения доменных имён DoH-серверов используется Bootstrap DNS.
-
-По умолчанию:
-
-```text
-8.8.8.8
-```
-
-Он нужен для первоначального разрешения имён:
-
-```text
-dns.alidns.com
-dns.cloudflare.com
-dns.google
-```
-
-и других DNS-серверов, заданных доменными именами.
-
-## TUN
-
-Для перехвата DNS-запросов приложений используется TUN inbound.
-
-Пример:
-
-```json
-{
-  "type": "tun",
-  "tag": "tun-in",
-  "interface_name": "tun0",
-  "address": [
-    "172.19.0.1/30"
-  ],
-  "auto_route": true,
-  "strict_route": true,
-  "stack": "gvisor",
-  "mtu": 1400
-}
-```
-
-DNS перехватывается правилом:
-
-```json
-{
-  "protocol": "dns",
-  "action": "hijack-dns"
-}
-```
-
-## Важное ограничение
-
-Этот проект управляет DNS-маршрутизацией.
-
-Он не является прокси и не определяет автоматически маршрут последующего TCP/UDP-соединения.
-
-Например:
-
-```text
-ChatGPT
-    │
-    ├── DNS-запрос ─────► Redirect DNS
-    │
-    └── HTTPS-трафик ───► определяется правилами route/outbound
-```
-
-Поэтому изменение DNS-сервера не означает автоматического изменения маршрута всего трафика приложения.
-
-## Установка через GitHub Pages
-
-1. Создайте GitHub-репозиторий.
-2. Добавьте в корень:
-
-```text
-index.html
-README.md
-```
-
-3. Откройте:
-
-```text
-Settings → Pages
-```
-
-4. Выберите:
-
-```text
-Deploy from a branch
-```
-
-5. Укажите:
-
-```text
-main
-/
-```
-
-После публикации сайт будет доступен по адресу:
-
-```text
-https://USERNAME.github.io/REPOSITORY/
-```
-
-## Локальный запуск
-
-Можно открыть `index.html` непосредственно в браузере.
-
-Либо запустить локальный HTTP-сервер:
+### Локально
 
 ```bash
-python -m http.server 8080
+git clone https://github.com/Kira361323/Dns-rules.git
+cd Dns-rules
+# Откройте index.html в браузере
 ```
 
-Затем открыть:
+---
 
-```text
-http://localhost:8080
+## 🏗️ Архитектура конфига
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    TUN (gvisor)                      │
+│              172.19.0.1/30 · MTU 1400               │
+│         auto_route · strict_route                   │
+│         exclude_package: [com.whatsapp]             │
+└──────────────────────┬──────────────────────────────┘
+                       │
+              ┌────────▼────────┐
+              │   Route Rules   │
+              │                 │
+              │  1. sniff       │
+              │  2. dns→hijack  │
+              │  3. :853→hijack │
+              │  4. :53→hijack  │
+              │  5. private→dir │
+              └────────┬────────┘
+                       │
+         ┌─────────────▼─────────────┐
+         │        DNS Rules          │
+         │                           │
+         │  excludeDomains → Direct  │
+         │  package_name  → Redirect │
+         │  customDomains → Redirect │
+         │  rule_set      → Redirect │
+         │  final         → Direct   │
+         └─────┬───────────────┬─────┘
+               │               │
+    ┌──────────▼──┐    ┌──────▼──────────┐
+    │ Redirect DNS│    │   Direct DNS    │
+    │ (DoH :443)  │    │   (DoH :443)   │
+    │ xbox-dns.ru │    │ dnsforge.de     │
+    └─────────────┘    └─────────────────┘
+               │               │
+         ┌─────▼───────────────▼─────┐
+         │   Bootstrap (UDP :53)     │
+         │   77.88.8.8 (Яндекс)      │
+         │   Резолвит hostname DNS   │
+         └───────────────────────────┘
 ```
 
-## Использование
+---
 
-1. Выберите `Redirect DNS`.
-2. Выберите `Direct DNS`.
-3. Проверьте URL `domains.srs`.
-4. Выберите интервал обновления Rule-Set.
-5. Укажите путь к `cache.db`.
-6. Добавьте приложения для Redirect DNS.
-7. Добавьте домены для Redirect DNS.
-8. Добавьте исключённые приложения.
-9. Добавьте исключённые домены.
-10. Нажмите **«Скачать конфигурацию Sing-Box (.json)»**.
-11. Импортируйте полученный JSON в совместимый клиент sing-box.
+## 📋 DNS-серверы
 
-## Пример настройки
+### Redirect (13)
 
-```text
-Redirect DNS:
-Xbox DNS
+| Сервер | DoT | DoH | Примечание |
+|--------|-----|-----|-----------|
+| Astracat | `dns.astracat.ru` | ✅ | |
+| Comss | `dns.comss.one` | ✅ | |
+| Geohide | `dns.geohide.ru` | ✅ :444 | Нестандартный порт |
+| Mafioznik | `dns.mafioznik.xyz` | ✅ | |
+| Malw Link | `dns.malw.link` | ✅ | |
+| Shecan | `free.shecan.ir` | — | Только DoT |
+| Xbox DNS | `xbox-dns.ru` | ✅ | |
 
-Direct DNS:
-DNSForge
+### Direct (42)
+
+| Сервер | DoT | DoH | Фильтрация |
+|--------|-----|-----|-----------|
+| AliDNS | `dns.alidns.com` | ✅ | — |
+| Applied Privacy | `dot1.applied-privacy.net` | ✅ `/query` | — |
+| BebasID | `dns.bebasid.com` | ✅ + OISD + HaGeZi | Ads/Trackers |
+| Cloudflare | `one.one.one.one` | ✅ | — |
+| Digitale Gesellschaft | `dns.digitale-gesellschaft.ch` | ✅ | — |
+| DNS.SB | `dot.sb` | ✅ | — |
+| DNSForge | `dnsforge.de` | ✅ | Ads/Trackers/Malware |
+| DNSPod / Pub | `dot.pub` | ✅ | — |
+| Google | `dns.google` | ✅ | — |
+| HaGeZi Juuri | `juuri.hagezi.org` | ✅ | Ultimate |
+| HaGeZi Root | `root.hagezi.org` | ✅ | Ultimate |
+| HaGeZi Wurzn | `wurzn.hagezi.org` | ✅ | Ultimate |
+| JoinDNS4 | `noads.joindns4.eu` | ✅ | Ads |
+| LibreDNS | `dot.libredns.gr` | ✅ + `/ads` | Ads |
+| Mullvad | `adblock.dns.mullvad.net` | ✅ | Ads/Trackers |
+| OpenBLD Ada | `ada.openbld.net` | ✅ | Ads/Malware |
+| Quad9 Standard | `dns.quad9.net` | ✅ | Malware |
+| Quad9 ECS | `dns11.quad9.net` | ✅ | Malware + ECS |
+| Tiarap | `dot.tiar.app` | ✅ | — |
+
+---
+
+## ⚙️ Требования
+
+| Компонент | Версия |
+|-----------|--------|
+| **sing-box** | ≥ **1.11** (используется `domain_resolver`, `action: "sniff"`, `ip_is_private`) |
+| **Android** | sing-box app или SFA/SFI |
+| **Платформа** | Android, Linux, Windows, macOS |
+
+> ⚠️ На sing-box **1.10 и ниже** конфиг **не запустится**.
+
+---
+
+## ❓ FAQ
+
+### DoT или DoH?
+
+| | DoT (:853) | DoH (:443) |
+|---|---|---|
+| **Порт** | 853 (может блокироваться DPI) | 443 (неотличим от HTTPS) |
+| **Шифрование** | TLS | TLS + HTTP/2 |
+| **Надёжность** | Может блокироваться | Практически не блокируется |
+| **Рекомендация** | Если DoT не блокируется | **По умолчанию** |
+
+### Что такое Bootstrap DNS?
+
+Плоский UDP-DNS (порт 53), который резолвит hostname ваших DoH/DoT-серверов в IP. Без него sing-box не знает, куда подключаться. Должен быть доступен в вашей сети.
+
+### Почему `ipv4_only`?
+
+Если провайдер не маршрутизирует IPv6, sing-box будет таймаутить на AAAA-записях. `ipv4_only` исключает эти задержки.
+
+### Что такое Rule-Set?
+
+Бинарный `.srs`-файл со списком доменов. Домены из него маршрутизируются в Redirect DNS. Обновляется автоматически с заданным интервалом.
+
+---
+
+## 📁 Структура проекта
+
+```
+Dns-rules/
+├── index.html              # Конфигуратор (GitHub Pages)
+├── README.md               # Этот файл
+├── LICENSE                 # MIT
+├── .github/
+│   └── workflows/
+│       └── dns-test.yml    # GitHub Action: тестер DNS
+└── assets/
+    └── screenshot.png      # Скриншот (опционально)
 ```
 
-Приложения:
+---
 
-```text
-com.openai.chatgpt
-com.anthropic.claude
-com.deepseek.chat
+## 📜 Лицензия
+
+[MIT](LICENSE)
 ```
-
-Домены:
-
-```text
-openai.com
-anthropic.com
-deepseek.com
-```
-
-Исключения:
-
-```text
-sberbank.ru
-gosuslugi.ru
-```
-
-Результат:
-
-```text
-OpenAI / Claude / DeepSeek
-        │
-        ▼
-   Redirect DNS
-
-domains.srs
-        │
-        ▼
-   Redirect DNS
-
-sberbank.ru / gosuslugi.ru
-        │
-        ▼
-DNS системы / провайдера
-
-Всё остальное
-        │
-        ▼
-    Direct DNS
-```
-
-## Структура репозитория
-
-Минимальный вариант:
-
-```text
-.
-├── index.html
-└── README.md
-```
-
-Если Rule-Set хранится в отдельном репозитории:
-
-```text
-DNS Configurator
-├── index.html
-└── README.md
-
-DNS Rules
-└── domains.srs
-```
-
-## Совместимость
-
-Проект ориентирован на версии sing-box, поддерживающие используемые возможности:
-
-- TUN inbound;
-- DNS server type `https`;
-- `domain_resolver`;
-- DNS rules;
-- `package_name`;
-- remote binary Rule-Set;
-- `.srs`;
-- `experimental.cache_file`.
-
-Перед использованием рекомендуется проверить версию ядра sing-box в конкретном клиенте.
-
-Клиенты на базе sing-box могут использовать разные версии ядра и иметь собственные ограничения.
-
-## Безопасность
-
-Конфигуратор является статическим HTML-приложением.
-
-Он:
-
-- не требует собственного backend;
-- не требует базы данных;
-- генерирует JSON непосредственно в браузере;
-- не требует регистрации;
-- не хранит конфигурацию на сервере проекта.
-
-Не добавляйте в поля конфигуратора пароли, приватные ключи, токены или другие секретные данные.
-
-## Лицензия
-
-Если отдельная лицензия не указана, автор сохраняет права на исходный код.
-
-Для публикации проекта с открытым исходным кодом рекомендуется добавить файл `LICENSE`, например с лицензией MIT.
-
-## Disclaimer
-
-Проект является инструментом генерации конфигураций sing-box.
-
-Совместимость зависит от версии sing-box и конкретного клиента.
-
-Перед использованием рекомендуется проверить:
-
-1. версию sing-box;
-2. поддержку TUN;
-3. поддержку DNS `package_name`;
-4. поддержку remote Rule-Set;
-5. поддержку binary `.srs`;
-6. поддержку `experimental.cache_file`;
-7. особенности реализации конкретного Android-клиента.
-
