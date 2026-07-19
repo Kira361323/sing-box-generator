@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sing-Box DNS Configurator v3</title>
+<title>Sing-Box DNS Configurator v3.1</title>
 <style>
 :root {
     --bg: #1e1e2e;
@@ -135,7 +135,7 @@ button:hover { background: #94e28f; }
 </head>
 <body>
 <div class="container">
-<h1>Sing-Box DNS Configurator v3</h1>
+<h1>Sing-Box DNS Configurator v3.1</h1>
 
 <!-- MODE -->
 <div class="section">
@@ -145,8 +145,8 @@ button:hover { background: #94e28f; }
     <label><input type="radio" name="profileMode" value="fallback"> Fallback (все DNS, перебор при таймауте)</label>
 </div>
 <div class="note">
-<b>Фиксированный</b> — вы выбираете один Redirect и один Direct DNS.<br>
-<b>Fallback</b> — все DNS категории попадают в конфиг. Sing-box перебирает при недоступности. Порядок = приоритет.
+<b>Фиксированный</b> — один Redirect и один Direct DNS.<br>
+<b>Fallback</b> — все DNS категории в конфиге. Sing-box перебирает при недоступности. Порядок = приоритет.
 </div>
 </div>
 
@@ -177,6 +177,7 @@ button:hover { background: #94e28f; }
         </select>
     </div>
 </div>
+
 <label for="bootstrapSelect">Bootstrap DNS (резолвит адреса DoH/DoT):</label>
 <select id="bootstrapSelect">
     <option value="8.8.8.8" selected>Google Primary (8.8.8.8)</option>
@@ -187,7 +188,21 @@ button:hover { background: #94e28f; }
     <option value="149.112.112.112">Quad9 Secondary (149.112.112.112)</option>
     <option value="77.88.8.8">Яндекс Primary (77.88.8.8)</option>
     <option value="77.88.8.1">Яндекс Secondary (77.88.8.1)</option>
+    <option value="custom">-- Свой IP --</option>
 </select>
+<div id="bootstrapCustomBox" class="custom-dns-box">
+    <label>Свой Bootstrap IP:</label>
+    <input id="bootstrapCustomIp" type="text" placeholder="Например: 77.88.8.7">
+</div>
+
+<label for="strategySelect">DNS Strategy:</label>
+<select id="strategySelect">
+    <option value="ipv4_only" selected>IPv4 only (рекомендуется)</option>
+    <option value="prefer_ipv4">Prefer IPv4</option>
+    <option value="prefer_ipv6">Prefer IPv6</option>
+    <option value="ipv6_only">IPv6 only</option>
+</select>
+
 <label for="remoteUrl">Remote Rule-Set URL:</label>
 <input id="remoteUrl" type="url" value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
 <div class="note">
@@ -268,9 +283,9 @@ const DEFAULT_REDIRECT_PACKAGES = [
     "com.suno.android"
 ];
 
-// Формат: host = hostname БЕЗ схемы и пути
-// port = только если != 443 (DoH) или != 853 (DoT)
-// path = только если != "/dns-query"
+// host = hostname БЕЗ схемы и пути
+// port = только если нестандартный (DoH: != 443, DoT: != 853)
+// path = только если нестандартный (!= /dns-query)
 const REDIRECT_DNS = [
     { name: "Xbox DNS (DoT)", host: "xbox-dns.ru", type: "tls", tag: "xbox-dot" },
     { name: "Xbox DNS (DoH)", host: "xbox-dns.ru", type: "https", tag: "xbox-doh" },
@@ -367,8 +382,18 @@ function getMode() {
 }
 
 function toggleDnsSection() {
-    const section = document.getElementById("dnsSelectSection");
-    section.style.display = getMode() === "fixed" ? "block" : "none";
+    document.getElementById("dnsSelectSection").style.display =
+        getMode() === "fixed" ? "block" : "none";
+}
+
+function getBootstrapIp() {
+    const val = document.getElementById("bootstrapSelect").value;
+    if (val === "custom") {
+        const ip = document.getElementById("bootstrapCustomIp").value.trim();
+        if (!ip) throw new Error("Введите IP кастомного Bootstrap DNS.");
+        return ip;
+    }
+    return val;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -376,6 +401,7 @@ window.addEventListener("DOMContentLoaded", () => {
     fillSelect("directSelect", DIRECT_DNS);
     handleCustomSelect("redirectSelect", "redirectCustomBox");
     handleCustomSelect("directSelect", "directCustomBox");
+    handleCustomSelect("bootstrapSelect", "bootstrapCustomBox");
     toggleDnsSection();
     document.querySelectorAll('input[name="profileMode"]').forEach(r =>
         r.addEventListener("change", toggleDnsSection)
@@ -442,7 +468,8 @@ function generateConfig() {
         const remoteUrl = document.getElementById("remoteUrl").value.trim();
         const updateInterval = document.getElementById("updateInterval").value;
         const logLevel = document.getElementById("logLevelSelect").value;
-        const bootstrapIp = document.getElementById("bootstrapSelect").value;
+        const strategy = document.getElementById("strategySelect").value;
+        const bootstrapIp = getBootstrapIp();
 
         if (!remoteUrl) throw new Error("Remote Rule-Set URL не указан.");
 
@@ -498,7 +525,7 @@ function generateConfig() {
                 servers: servers,
                 rules: [],
                 final: directTag,
-                strategy: "prefer_ipv4",
+                strategy: strategy,
                 independent_cache: true
             },
             inbounds: [tunInbound],
@@ -515,6 +542,8 @@ function generateConfig() {
                 rules: [
                     { action: "sniff" },
                     { protocol: "dns", action: "hijack-dns" },
+                    { port: 853, action: "hijack-dns" },
+                    { port: 53, action: "hijack-dns" },
                     { ip_is_private: true, outbound: "direct" }
                 ],
                 default_domain_resolver: "bootstrap",
@@ -552,6 +581,7 @@ function generateConfig() {
             "Конфигурация успешно создана!\n\n" +
             `Режим: ${mode === "fixed" ? "Фиксированный" : "Fallback"}\n` +
             `Bootstrap: ${bootstrapIp}\n` +
+            `Strategy: ${strategy}\n` +
             `Redirect DNS → ${redirectTag}\n` +
             `Direct DNS   → ${directTag}\n` +
             `Rule-Set Tag → ${ruleSetTag}\n` +
