@@ -1,0 +1,58 @@
+name: Sing-Box Profile Validator
+
+on:
+  workflow_dispatch:
+    inputs:
+      config_dir:
+        description: 'Директория с JSON-профилями для проверки'
+        required: false
+        default: './configs'
+
+jobs:
+  validate-profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Sing-Box CLI
+        run: |
+          curl -fsSL https://sing-box.app/gpg.key -o /etc/apt/keyrings/sagernet.asc
+          chmod a+r /etc/apt/keyrings/sagernet.asc
+          echo "deb [arch=`dpkg --print-architecture` signed-by=/etc/apt/keyrings/sagernet.asc] https://deb.sagernet.org/ * *" | sudo tee /etc/apt/sources.list.d/sagernet.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y sing-box
+
+      - name: Check Sing-Box Version
+        run: sing-box version
+
+      - name: Validate JSON Profiles
+        run: |
+          DIR="${{ github.event.inputs.config_dir || './configs' }}"
+          echo "=== Начинаю ручную проверку профилей Sing-Box в директории: $DIR ==="
+          
+          if [ ! -d "$DIR" ]; then
+            echo "⚠ [WARNING] Директория $DIR не найдена. Пропускаю проверку без падения пайплайна."
+            exit 0
+          fi
+
+          CONFIGS=$(find "$DIR" -type f -name "*.json")
+          
+          if [ -z "$CONFIGS" ]; then
+            echo "⚠ [WARNING] В директории $DIR нет .json файлов. Проверка завершена без ошибок."
+            exit 0
+          fi
+
+          for config in $CONFIGS; do
+            echo "------------------------------------------------"
+            echo "Проверка конфигурации: $config"
+            
+            if sing-box check -c "$config"; then
+              echo "✔ [SUCCESS] $config полностью валиден."
+            else
+              echo "✖ [ERROR] Ошибка валидации в файле $config!"
+              exit 1
+            fi
+          done
+          echo "------------------------------------------------"
+          echo "=== Все профили успешно прошли проверку! ==="
