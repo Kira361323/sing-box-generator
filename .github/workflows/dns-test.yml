@@ -21,7 +21,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq dnsutils curl jq > /dev/null 2>&1
+          sudo apt-get install -y -qq dnsutils curl jq ca-certificates > /dev/null 2>&1
+          sudo update-ca-certificates 2>/dev/null || true
 
       - name: Run DNS tests
         id: test
@@ -29,6 +30,7 @@ jobs:
           DOMAIN: ${{ inputs.test_domain }}
           TIMEOUT: ${{ inputs.timeout }}
         run: |
+          set +e
           RESULTS_FILE="dns-results.md"
           echo "# DNS Test Results" > "$RESULTS_FILE"
           echo "" >> "$RESULTS_FILE"
@@ -145,19 +147,29 @@ jobs:
           for entry in "${DOH_SERVERS[@]}"; do
             IFS='|' read -r name url <<< "$entry"
             START=$(date +%s%N)
-            RESP=$(curl -s --max-time "$TIMEOUT" \
+            HTTP_CODE=$(curl -s -o /tmp/doh_resp.json -w "%{http_code}" \
+              --max-time "$TIMEOUT" \
               -H "Accept: application/dns-json" \
               "${url}?name=${DOMAIN}&type=A" 2>/dev/null)
+            CURL_EXIT=$?
             END=$(date +%s%N)
             MS=$(( (END - START) / 1000000 ))
-            IP=$(echo "$RESP" | jq -r '.Answer[]? | select(.type==1) | .data' 2>/dev/null | head -1)
-            if [ -n "$IP" ]; then
-              echo "| $name | $url | ✅ OK | ${MS}ms | $IP |" >> "$RESULTS_FILE"
-            elif [ -n "$RESP" ]; then
-              echo "| $name | $url | ⚠️ WARN | ${MS}ms | нет A-записи |" >> "$RESULTS_FILE"
+
+            if [ "$CURL_EXIT" -eq 60 ]; then
+              echo "| $name | $url | ⚠️ SSL | ${MS}ms | сертификат не верифицирован |" >> "$RESULTS_FILE"
+            elif [ "$CURL_EXIT" -ne 0 ]; then
+              echo "| $name | $url | ❌ FAIL | — | curl exit $CURL_EXIT |" >> "$RESULTS_FILE"
+            elif [ "$HTTP_CODE" = "200" ]; then
+              IP=$(jq -r '.Answer[]? | select(.type==1) | .data' /tmp/doh_resp.json 2>/dev/null | head -1)
+              if [ -n "$IP" ]; then
+                echo "| $name | $url | ✅ OK | ${MS}ms | $IP |" >> "$RESULTS_FILE"
+              else
+                echo "| $name | $url | ⚠️ WARN | ${MS}ms | нет A-записи |" >> "$RESULTS_FILE"
+              fi
             else
-              echo "| $name | $url | ❌ FAIL | — | — |" >> "$RESULTS_FILE"
+              echo "| $name | $url | ❌ FAIL | ${MS}ms | HTTP $HTTP_CODE |" >> "$RESULTS_FILE"
             fi
+            rm -f /tmp/doh_resp.json
           done
           echo "" >> "$RESULTS_FILE"
 
@@ -169,6 +181,7 @@ jobs:
           echo "**Итого:** ✅ $OK_COUNT OK | ⚠️ $WARN_COUNT WARN | ❌ $FAIL_COUNT FAIL" >> "$RESULTS_FILE"
 
           echo "results_file=$RESULTS_FILE" >> "$GITHUB_OUTPUT"
+          set -e
 
       - name: Print results
         run: cat dns-results.md
