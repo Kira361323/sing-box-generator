@@ -1,517 +1,359 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sing-Box DNS Configurator</title>
-<style>
-:root {
-    --bg: #1e1e2e;
-    --surface: #181825;
-    --card: #313244;
-    --text: #cdd6f4;
-    --accent: #89b4fa;
-    --border: #45475a;
-    --hover: #b4befe;
-    --warn: #f38ba8;
-    --success: #a6e3a1;
-}
-* { box-sizing: border-box; }
-body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-}
-.container {
-    width: 100%;
-    max-width: 950px;
-    background: var(--surface);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-h1, h2 {
-    margin-top: 0;
-    color: var(--accent);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
-}
-.section {
-    background: var(--card);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border);
-}
-label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 0.9em;
-}
-textarea, select, input {
-    width: 100%;
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px;
-    font-family: monospace;
-    font-size: 0.9em;
-    margin-bottom: 15px;
-}
-textarea { resize: vertical; }
-textarea:focus, select:focus, input:focus {
-    outline: none;
-    border-color: var(--accent);
-}
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-.custom-dns-box {
-    display: none;
-    background: var(--surface);
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px dashed var(--accent);
-    margin-top: -5px;
-    margin-bottom: 15px;
-}
-button {
-    width: 100%;
-    background: var(--success);
-    color: #11111b;
-    border: none;
-    padding: 14px 20px;
-    font-size: 1.1em;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-}
-button:hover { background: #94e28f; }
-.note {
-    font-size: 0.8em;
-    color: #a6adc8;
-    margin-top: -10px;
-    margin-bottom: 15px;
-    line-height: 1.5;
-}
-.status {
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin-top: 10px;
-    font-family: monospace;
-    font-size: 0.85em;
-    white-space: pre-wrap;
-}
-@media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sing-Box Profile Generator (Lead Ed.)</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-mut: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --error: #ef4444;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font);
+            padding: 2rem 1rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; color: #60a5fa; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+        @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group.full { grid-column: 1 / -1; }
+        label { font-size: 0.875rem; font-weight: 600; color: var(--text-mut); }
+        input, select {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.625rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.925rem;
+            transition: border-color 0.15s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        .custom-dns-input { display: none; margin-top: 0.5rem; }
+        .actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        button:hover { background: var(--accent-hover); }
+        button.secondary { background: #475569; }
+        button.secondary:hover { background: #334155; }
+        #status { margin-top: 1rem; font-size: 0.875rem; font-weight: 600; }
+        .status-error { color: var(--error); }
+        .status-success { color: var(--success); }
+        .output-section { margin-top: 2rem; }
+        pre {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            max-height: 450px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #34d399;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Sing-Box DNS Configurator</h1>
+    <h1>Архитектурный генератор профилей Sing-Box</h1>
+    
+    <div class="grid">
+        <div class="form-group full">
+            <label for="remoteUrl">Remote Rule-Set URL (.srs):</label>
+            <input type="text" id="remoteUrl" value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
+        </div>
 
-<!-- SYSTEM SETTINGS -->
-<div class="section">
-<h2>Системные параметры</h2>
-<div class="grid">
-<div>
-<label for="logLevelSelect">Уровень логирования:</label>
-<select id="logLevelSelect">
-<option value="panic" selected>panic</option>
-<option value="fatal">fatal</option>
-<option value="error">error</option>
-<option value="warn">warn</option>
-<option value="info">info</option>
-<option value="debug">debug</option>
-<option value="trace">trace</option>
-</select>
-</div>
-<div>
-<label for="updateInterval">Интервал обновления:</label>
-<select id="updateInterval">
-<option value="1h">1 час</option>
-<option value="6h">6 часов</option>
-<option value="12h">12 часов</option>
-<option value="24h" selected>24 часа</option>
-<option value="168h">7 дней</option>
-</select>
-</div>
-</div>
+        <div class="form-group">
+            <label for="updateInterval">Интервал обновления Rule-Set:</label>
+            <select id="updateInterval">
+                <option value="12h">12 часов</option>
+                <option value="24h" selected>24 часа</option>
+                <option value="48h">48 часов</option>
+                <option value="72h">72 часа</option>
+            </select>
+        </div>
 
-<label for="remoteUrl">Remote Rule-Set URL:</label>
-<input id="remoteUrl" type="url" value="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
+        <div class="form-group">
+            <label for="logLevel">Уровень логирования (Log Level):</label>
+            <select id="logLevel">
+                <option value="info" selected>info (Стандартный)</option>
+                <option value="debug">debug (Отладка сети)</option>
+                <option value="warn">warn (Только предупреждения)</option>
+                <option value="error">error (Только ошибки)</option>
+            </select>
+        </div>
 
-<div class="note">
-Приложения исключаются напрямую из TUN-интерфейса. Удаленный Rule-Set загружается с параметром <code>download_detour: "direct"</code>.
-</div>
-</div>
+        <div class="form-group">
+            <label for="dnsStrategy">Стратегия резолвинга DNS:</label>
+            <select id="dnsStrategy">
+                <option value="prefer_ipv4" selected>prefer_ipv4 (Рекомендуется)</option>
+                <option value="ipv4_only">ipv4_only (Строгая изоляция IPv6)</option>
+                <option value="prefer_ipv6">prefer_ipv6</option>
+            </select>
+        </div>
 
-<!-- DNS SERVERS -->
-<div class="section">
-<h2>Выбор DNS-серверов</h2>
-<div class="grid">
-<div>
-<label for="redirectSelect">DNS для Redirect (SmartDNS):</label>
-<select id="redirectSelect">
-<option value="" selected>-- Не выбрано (по умолчанию пусто) --</option>
-<option value="custom">-- Ввести свой DNS (DoH/DoT/UDP) --</option>
-</select>
-<div id="redirectCustomBox" class="custom-dns-box">
-<label>Свой Redirect DNS (URL или хост):</label>
-<input id="redirectCustomUrl" type="text" placeholder="https://doh.example.com/dns-query или dot.example.com">
-</div>
-<div class="note">Обслуживает выбранные приложения, домены и Remote Rule-Set.</div>
-</div>
+        <div class="form-group">
+            <label for="redirectSelect">Redirect DNS (для проксируемого трафика):</label>
+            <select id="redirectSelect" onchange="toggleCustom('redirectSelect', 'redirectCustom')">
+                <option value='{"type":"https","url":"dnsforge.de"}' selected>DNSForge DoH (No-Ads / Privacy)</option>
+                <option value='{"type":"https","url":"dns.adguard-dns.com"}'>AdGuard DoH (AdBlock)</option>
+                <option value='{"type":"https","url":"cloudflare-dns.com"}'>Cloudflare DoH (Fast)</option>
+                <option value='{"type":"https","url":"dns.google"}'>Google DoH (Standard)</option>
+                <option value='{"type":"tls","url":"dns.google"}'>Google DoT (TLS)</option>
+                <option value="custom">-- Пользовательский DNS --</option>
+            </select>
+            <input type="text" id="redirectCustom" class="custom-dns-input" placeholder="например: https://dns.quad9.net/dns-query">
+        </div>
 
-<div>
-<label for="directSelect">DNS для Direct (Default):</label>
-<select id="directSelect">
-<option value="" selected>-- Не выбрано (по умолчанию пусто) --</option>
-<option value="custom">-- Ввести свой DNS (DoH/DoT/UDP) --</option>
-</select>
-<div id="directCustomBox" class="custom-dns-box">
-<label>Свой Direct DNS (URL или хост):</label>
-<input id="directCustomUrl" type="text" placeholder="https://doh.example.com/dns-query или dot.example.com">
-</div>
-<div class="note">Обслуживает весь остальной трафик.</div>
-</div>
-</div>
-</div>
+        <div class="form-group">
+            <label for="directSelect">Direct DNS (для локального/обходного трафика):</label>
+            <select id="directSelect" onchange="toggleCustom('directSelect', 'directCustom')">
+                <option value='{"type":"https","url":"dns.google"}' selected>Google DoH (Standard)</option>
+                <option value='{"type":"https","url":"cloudflare-dns.com"}'>Cloudflare DoH (Fast)</option>
+                <option value='{"type":"https","url":"dns.adguard-dns.com"}'>AdGuard DoH (AdBlock)</option>
+                <option value='{"type":"tls","url":"1.1.1.1"}'>Cloudflare DoT (TLS)</option>
+                <option value="custom">-- Пользовательский DNS --</option>
+            </select>
+            <input type="text" id="directCustom" class="custom-dns-input" placeholder="например: tls://1.1.1.1">
+        </div>
+    </div>
 
-<!-- REDIRECT DNS RULES -->
-<div class="section">
-<h2>Маршрутизация в Redirect DNS</h2>
-<label for="customDomains">Свои домены для Redirect:</label>
-<textarea id="customDomains" rows="3"></textarea>
+    <div class="actions">
+        <button onclick="generateConfig()">Сгенерировать профиль</button>
+        <button class="secondary" onclick="copyConfig()">Копировать в буфер</button>
+        <button class="secondary" onclick="downloadConfig()">Скачать .json</button>
+    </div>
 
-<label for="customPackages">Package name для Redirect (дополнительно к базовым из профиля):</label>
-<textarea id="customPackages" rows="6"></textarea>
-</div>
+    <div id="status"></div>
 
-<!-- EXCLUSIONS -->
-<div class="section">
-<h2>Исключения</h2>
-<label for="excludeDomains">Домены → DNS оператора (local DNS):</label>
-<textarea id="excludeDomains" rows="3"></textarea>
-
-<label for="excludePackages">Package name → Исключение из TUN :</label>
-<textarea id="excludePackages" rows="3"></textarea>
-<div class="note">
-Указанные приложения добавляются в <code>inbounds.exclude_package</code> и полностью минуют туннель.
-</div>
-</div>
-
-<!-- GENERATE -->
-<button id="generateButton">Скачать конфигурацию Sing-Box (.json)</button>
-<div id="status" class="status">Готово к генерации. Выберите DNS-серверы.</div>
+    <div class="output-section">
+        <label>Результат генерации (Sing-Box JSON):</label>
+        <pre><code id="jsonOutput">// Здесь появится сгенерированный конфигурационный файл...</code></pre>
+    </div>
 </div>
 
 <script>
-const DEFAULT_REDIRECT_PACKAGES = [
-    "com.openai.chatgpt",
-    "com.anthropic.claude",
-    "com.microsoft.copilot",
-    "com.deepl.mobiletranslator",
-    "com.deepseek.chat",
-    "com.google.android.apps.bard",
-    "ai.x.grok",
-    "ai.leonardo.leonardo",
-    "ai.mistral.chat",
-    "com.google.android.apps.labs.language.tailwind",
-    "ai.qwenlm.chat.android",
-    "com.suno.android"
-];
-
-const REDIRECT_DNS = [
-    { name: "Xbox DNS (DoT) [xbox-dns.ru]", url: "xbox-dns.ru", type: "tls", tag: "xbox-dot" },
-    { name: "Xbox DNS (DoH) [https://xbox-dns.ru/dns-query]", url: "https://xbox-dns.ru/dns-query", type: "https", tag: "xbox-doh" },
-    { name: "Comss DNS (DoT) [dns.comss.one]", url: "dns.comss.one", type: "tls", tag: "comss-dot" },
-    { name: "Comss DNS (DoH) [https://dns.comss.one/dns-query]", url: "https://dns.comss.one/dns-query", type: "https", tag: "comss-doh" },
-    { name: "Shecan (DoT) [free.shecan.ir]", url: "free.shecan.ir", type: "tls", tag: "shecan-dot" },
-    { name: "Malw Link (DoT) [dns.malw.link]", url: "dns.malw.link", type: "tls", tag: "malw-dot" },
-    { name: "Malw Link (DoH) [https://dns.malw.link/dns-query]", url: "https://dns.malw.link/dns-query", type: "https", tag: "malw-doh" },
-    { name: "Astracat (DoT) [dns.astracat.ru]", url: "dns.astracat.ru", type: "tls", tag: "astracat-dot" },
-    { name: "Astracat (DoH) [https://dns.astracat.ru/dns-query]", url: "https://dns.astracat.ru/dns-query", type: "https", tag: "astracat-doh" },
-    { name: "Mafioznik (DoT) [dns.mafioznik.xyz]", url: "dns.mafioznik.xyz", type: "tls", tag: "mafioznik-dot" },
-    { name: "Mafioznik (DoH) [https://dns.mafioznik.xyz/dns-query]", url: "https://dns.mafioznik.xyz/dns-query", type: "https", tag: "mafioznik-doh" },
-    { name: "Geohide (DoT) [dns.geohide.ru]", url: "dns.geohide.ru", type: "tls", tag: "geohide-dot" },
-    { name: "Geohide (DoH) [https://dns.geohide.ru:444/dns-query]", url: "https://dns.geohide.ru:444/dns-query", type: "https", tag: "geohide-doh" }
-];
-
-const DIRECT_DNS = [
-    { name: "DNSForge (DoT) [dnsforge.de]", url: "dnsforge.de", type: "tls", tag: "dnsforge-dot" },
-    { name: "DNSForge (DoH) [https://dnsforge.de/dns-query]", url: "https://dnsforge.de/dns-query", type: "https", tag: "dnsforge-doh" },
-    { name: "AliDNS (DoT) [dns.alidns.com]", url: "dns.alidns.com", type: "tls", tag: "alidns-dot" },
-    { name: "AliDNS (DoH) [https://dns.alidns.com/dns-query]", url: "https://dns.alidns.com/dns-query", type: "https", tag: "alidns-doh" },
-    { name: "BebasID (DoT) [dns.bebasid.com]", url: "dns.bebasid.com", type: "tls", tag: "bebasid-dot" },
-    { name: "BebasID (DoH standard) [https://dns.bebasid.com/dns-query]", url: "https://dns.bebasid.com/dns-query", type: "https", tag: "bebasid-doh" },
-    { name: "BebasID (DoH OISD) [https://dns.bebasid.com/dns-oisd]", url: "https://dns.bebasid.com/dns-oisd", type: "https", tag: "bebasid-oisd" },
-    { name: "BebasID (DoH HaGeZi) [https://dns.bebasid.com/dns-hagezi]", url: "https://dns.bebasid.com/dns-hagezi", type: "https", tag: "bebasid-hagezi" },
-    { name: "Cloudflare (DoT) [one.one.one.one]", url: "one.one.one.one", type: "tls", tag: "cf-dot" },
-    { name: "Cloudflare (DoH) [https://dns.cloudflare.com/dns-query]", url: "https://dns.cloudflare.com/dns-query", type: "https", tag: "cf-doh" },
-    { name: "DNS.SB (DoT) [dot.sb]", url: "dot.sb", type: "tls", tag: "sb-dot" },
-    { name: "DNS.SB (DoH) [https://doh.dns.sb/dns-query]", url: "https://doh.dns.sb/dns-query", type: "https", tag: "sb-doh" },
-    { name: "DNSPod / Pub (DoT) [dot.pub]", url: "dot.pub", type: "tls", tag: "pub-dot" },
-    { name: "DNSPod / Pub (DoH) [https://dns.pub/dns-query]", url: "https://dns.pub/dns-query", type: "https", tag: "pub-doh" },
-    { name: "Google DNS (DoT) [dns.google]", url: "dns.google", type: "tls", tag: "google-dot" },
-    { name: "Google DNS (DoH) [https://dns.google/dns-query]", url: "https://dns.google/dns-query", type: "https", tag: "google-doh" },
-    { name: "Mullvad Adblock (DoT) [adblock.dns.mullvad.net]", url: "adblock.dns.mullvad.net", type: "tls", tag: "mullvad-dot" },
-    { name: "Mullvad Adblock (DoH) [https://adblock.dns.mullvad.net/dns-query]", url: "https://adblock.dns.mullvad.net/dns-query", type: "https", tag: "mullvad-doh" },
-    { name: "OpenBLD Ada (DoT) [ada.openbld.net]", url: "ada.openbld.net", type: "tls", tag: "openbld-dot" },
-    { name: "OpenBLD Ada (DoH) [https://ada.openbld.net/dns-query]", url: "https://ada.openbld.net/dns-query", type: "https", tag: "openbld-doh" },
-    { name: "Quad9 Standard (DoT) [dns.quad9.net]", url: "dns.quad9.net", type: "tls", tag: "quad9-dot" },
-    { name: "Quad9 Standard (DoH) [https://dns.quad9.net/dns-query]", url: "https://dns.quad9.net/dns-query", type: "https", tag: "quad9-doh" },
-    { name: "Quad9 ECS (DoT) [dns11.quad9.net]", url: "dns11.quad9.net", type: "tls", tag: "quad9-11-dot" },
-    { name: "Quad9 ECS (DoH) [https://dns11.quad9.net/dns-query]", url: "https://dns11.quad9.net/dns-query", type: "https", tag: "quad9-11-doh" },
-    { name: "Applied Privacy (DoT) [dot1.applied-privacy.net]", url: "dot1.applied-privacy.net", type: "tls", tag: "applied-dot" },
-    { name: "Applied Privacy (DoH) [https://doh.applied-privacy.net/query]", url: "https://doh.applied-privacy.net/query", type: "https", tag: "applied-doh" },
-    { name: "Digitale Gesellschaft (DoT) [dns.digitale-gesellschaft.ch]", url: "dns.digitale-gesellschaft.ch", type: "tls", tag: "digiges-dot" },
-    { name: "Digitale Gesellschaft (DoH) [https://dns.digitale-gesellschaft.ch/dns-query]", url: "https://dns.digitale-gesellschaft.ch/dns-query", type: "https", tag: "digiges-doh" },
-    { name: "JoinDNS4 NoAds (DoT) [noads.joindns4.eu]", url: "noads.joindns4.eu", type: "tls", tag: "joindns-dot" },
-    { name: "JoinDNS4 NoAds (DoH) [https://noads.joindns4.eu/dns-query]", url: "https://noads.joindns4.eu/dns-query", type: "https", tag: "joindns-doh" },
-    { name: "LibreDNS (DoT) [dot.libredns.gr]", url: "dot.libredns.gr", type: "tls", tag: "libredns-dot" },
-    { name: "LibreDNS Standard (DoH) [https://doh.libredns.gr/dns-query]", url: "https://doh.libredns.gr/dns-query", type: "https", tag: "libredns-doh" },
-    { name: "LibreDNS Ads (DoH) [https://doh.libredns.gr/ads]", url: "https://doh.libredns.gr/ads", type: "https", tag: "libredns-ads" },
-    { name: "HaGeZi Root (DoT) [root.hagezi.org]", url: "root.hagezi.org", type: "tls", tag: "hagezi-root-dot" },
-    { name: "HaGeZi Root (DoH) [https://root.hagezi.org/dns-query]", url: "https://root.hagezi.org/dns-query", type: "https", tag: "hagezi-root-doh" },
-    { name: "HaGeZi Wurzn (DoT) [wurzn.hagezi.org]", url: "wurzn.hagezi.org", type: "tls", tag: "hagezi-wurzn-dot" },
-    { name: "HaGeZi Wurzn (DoH) [https://wurzn.hagezi.org/dns-query]", url: "https://wurzn.hagezi.org/dns-query", type: "https", tag: "hagezi-wurzn-doh" },
-    { name: "HaGeZi Juuri (DoT) [juuri.hagezi.org]", url: "juuri.hagezi.org", type: "tls", tag: "hagezi-juuri-dot" },
-    { name: "HaGeZi Juuri (DoH) [https://juuri.hagezi.org/dns-query]", url: "https://juuri.hagezi.org/dns-query", type: "https", tag: "hagezi-juuri-doh" },
-    { name: "Tiarap (DoT) [dot.tiar.app]", url: "dot.tiar.app", type: "tls", tag: "tiar-dot" },
-    { name: "Tiarap Org (DoH) [https://doh.tiarap.org/dns-query]", url: "https://doh.tiarap.org/dns-query", type: "https", tag: "tiarap-doh" },
-    { name: "Tiarap App (DoH) [https://doh.tiar.app/dns-query]", url: "https://doh.tiar.app/dns-query", type: "https", tag: "tiarapp-doh" }
-];
-
-function fillSelect(id, list) {
-    const select = document.getElementById(id);
-    list.forEach(dns => {
-        const option = document.createElement("option");
-        option.value = JSON.stringify({ url: dns.url, type: dns.type, tag: dns.tag });
-        option.textContent = dns.name;
-        select.appendChild(option);
-    });
-}
-
-function handleCustomSelect(selectId, boxId) {
-    const select = document.getElementById(selectId);
-    const box = document.getElementById(boxId);
-    select.addEventListener("change", () => {
-        if (select.value === "custom") {
-            box.style.display = "block";
-        } else {
-            box.style.display = "none";
-        }
-    });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-    fillSelect("redirectSelect", REDIRECT_DNS);
-    fillSelect("directSelect", DIRECT_DNS);
-    handleCustomSelect("redirectSelect", "redirectCustomBox");
-    handleCustomSelect("directSelect", "directCustomBox");
-});
-
-function parseInput(id) {
-    const value = document.getElementById(id).value.trim();
-    if (!value) return [];
-    return [...new Set(value.split(/[\n,]+/).map(item => item.trim()).filter(Boolean))];
-}
-
-function parseDnsSelection(selectId, inputId, defaultTag) {
-    const val = document.getElementById(selectId).value;
-    if (!val) throw new Error(`Пожалуйста, выберите или введите DNS для ${defaultTag}.`);
-    
-    if (val === "custom") {
-        const customUrl = document.getElementById(inputId).value.trim();
-        if (!customUrl) throw new Error(`Введите адрес кастомного DNS для ${defaultTag}.`);
-        
-        let type = "tls";
-        let cleanServer = customUrl;
-        
-        if (customUrl.startsWith("https://")) {
-            type = "https";
-            cleanServer = customUrl;
-        } else if (customUrl.startsWith("tls://")) {
-            type = "tls";
-            cleanServer = customUrl.replace("tls://", "");
-        } else if (customUrl.startsWith("udp://")) {
-            type = "udp";
-            cleanServer = customUrl.replace("udp://", "");
-        }
-        return { url: cleanServer, type: type, tag: defaultTag };
+    function toggleCustom(selectId, inputId) {
+        const val = document.getElementById(selectId).value;
+        const inputEl = document.getElementById(inputId);
+        inputEl.style.display = (val === 'custom') ? 'block' : 'none';
     }
-    return JSON.parse(val);
-}
 
-function generateConfig() {
-    const status = document.getElementById("status");
-    try {
-        const remoteUrl = document.getElementById("remoteUrl").value.trim();
-        const updateInterval = document.getElementById("updateInterval").value;
-        const logLevel = document.getElementById("logLevelSelect").value;
+    // Жесткая очистка URL от протоколов, путей и портов для Sing-Box
+    function parseDnsInput(url, defaultType = 'https') {
+        let cleanUrl = url.trim();
+        let type = defaultType;
 
-        if (!remoteUrl) throw new Error("Remote Rule-Set URL не указан.");
+        if (cleanUrl.startsWith('https://')) type = 'https';
+        else if (cleanUrl.startsWith('tls://')) type = 'tls';
+        else if (cleanUrl.startsWith('udp://')) type = 'udp';
+        else if (cleanUrl.startsWith('tcp://')) type = 'tcp';
 
-        const redirectObj = parseDnsSelection("redirectSelect", "redirectCustomUrl", "redirect-dns");
-        const directObj = parseDnsSelection("directSelect", "directCustomUrl", "direct-dns");
-
-        const fileName = remoteUrl.split('/').pop().split('?')[0];
-        const baseName = fileName.replace('.srs', '');
-        const ruleSetTag = baseName ? `${baseName}-ruleset` : "domains-ruleset";
-
-        const customDomains = parseInput("customDomains");
-        const customPackagesInput = parseInput("customPackages");
-        const allRedirectPackages = [...new Set([...DEFAULT_REDIRECT_PACKAGES, ...customPackagesInput])];
+        // Удаляем префикс протокола
+        cleanUrl = cleanUrl.replace(/^(https?|tls|udp|tcp):\/\//i, '');
         
-        const excludeDomains = parseInput("excludeDomains");
-        const excludePackages = parseInput("excludePackages");
-
-        const servers = [
-            {
-                type: "udp",
-                tag: "bootstrap",
-                server: "8.8.8.8"
-            },
-            {
-                type: redirectObj.type,
-                tag: redirectObj.tag,
-                server: redirectObj.url,
-                domain_resolver: "bootstrap"
-            },
-            {
-                type: directObj.type,
-                tag: directObj.tag,
-                server: directObj.url,
-                domain_resolver: "bootstrap"
-            }
-        ];
-
-        if (excludeDomains.length > 0) {
-            servers.unshift({
-                type: "local",
-                tag: "local"
-            });
+        // Удаляем путь (например, /dns-query)
+        cleanUrl = cleanUrl.split('/')[0];
+        
+        // Удаляем порт, если он есть (кроме IPv6 адресов)
+        let port = undefined;
+        if (cleanUrl.includes(':') && !cleanUrl.includes('::')) {
+            const parts = cleanUrl.split(':');
+            cleanUrl = parts[0];
+            port = parseInt(parts[1], 10);
         }
 
-        const tunInbound = {
-            type: "tun",
-            tag: "tun-in",
-            interface_name: "tun0",
-            address: ["172.19.0.1/30"],
-            auto_route: true,
-            strict_route: true,
-            stack: "gvisor",
-            mtu: 1400
-        };
+        const res = { type: type, server: cleanUrl };
+        if (port) res.server_port = port;
+        return res;
+    }
 
-        if (excludePackages.length > 0) {
-            tunInbound.exclude_package = excludePackages;
+    function getDnsSelection(selectId, inputId) {
+        const selectVal = document.getElementById(selectId).value;
+        if (selectVal === 'custom') {
+            const customVal = document.getElementById(inputId).value.trim();
+            if (!customVal) throw new Error(`Ошибка: Заполните поле пользовательского DNS для ${selectId}`);
+            return parseDnsInput(customVal);
         }
+        const parsed = JSON.parse(selectVal);
+        return parseDnsInput(parsed.url, parsed.type);
+    }
 
-        const config = {
-            log: {
-                level: logLevel,
-                timestamp: true
-            },
-            dns: {
-                servers: servers,
-                rules: [],
-                final: directObj.tag,
-                strategy: "prefer_ipv4",
-                independent_cache: true
-            },
-            inbounds: [ tunInbound ],
-            outbounds: [
-                {
-                    type: "direct",
-                    tag: "direct"
-                }
-            ],
-            route: {
-                rule_set: [
+    function generateConfig() {
+        const statusEl = document.getElementById('status');
+        statusEl.className = '';
+        statusEl.textContent = '';
+
+        try {
+            const remoteUrl = document.getElementById('remoteUrl').value.trim();
+            if (!remoteUrl) throw new Error('Ошибка: Не указан URL для Remote Rule-Set.');
+
+            const updateInterval = document.getElementById('updateInterval').value;
+            const logLevel = document.getElementById('logLevel').value;
+            const strategy = document.getElementById('dnsStrategy').value;
+
+            const redirectDns = getDnsSelection('redirectSelect', 'redirectCustom');
+            const directDns = getDnsSelection('directSelect', 'directCustom');
+
+            const config = {
+                log: {
+                    disabled: false,
+                    level: logLevel,
+                    timestamp: true
+                },
+                dns: {
+                    servers: [
+                        {
+                            tag: "bootstrap",
+                            type: "udp",
+                            server: "8.8.8.8"
+                        },
+                        {
+                            tag: "redirect-dns",
+                            type: redirectDns.type,
+                            server: redirectDns.server,
+                            domain_resolver: "bootstrap",
+                            ...(redirectDns.server_port && { server_port: redirectDns.server_port })
+                        },
+                        {
+                            tag: "direct-dns",
+                            type: directDns.type,
+                            server: directDns.server,
+                            domain_resolver: "bootstrap",
+                            ...(directDns.server_port && { server_port: directDns.server_port })
+                        }
+                    ],
+                    rules: [
+                        {
+                            outbound: "any",
+                            server: "direct-dns"
+                        },
+                        {
+                            rule_set: "domains-ruleset",
+                            server: "redirect-dns"
+                        }
+                    ],
+                    strategy: strategy
+                },
+                inbounds: [
                     {
-                        type: "remote",
-                        tag: ruleSetTag,
-                        format: "binary",
-                        url: remoteUrl,
-                        update_interval: updateInterval,
-                        download_detour: "direct"
+                        type: "tun",
+                        tag: "tun-in",
+                        interface_name: "tun0",
+                        inet4_address: "172.19.0.1/30",
+                        auto_route: true,
+                        strict_route: true,
+                        sniff: true,
+                        sniff_override_destination: false
                     }
                 ],
-                rules: [
-                    { action: "sniff" },
-                    { protocol: "dns", action: "hijack-dns" },
-                    { ip_is_private: true, outbound: "direct" }
+                outbounds: [
+                    {
+                        type: "direct",
+                        tag: "direct"
+                    },
+                    {
+                        type: "dns",
+                        tag: "dns-out"
+                    }
                 ],
-                default_domain_resolver: "bootstrap",
-                auto_detect_interface: true,
-                final: "direct"
-            }
-        };
+                route: {
+                    rule_set: [
+                        {
+                            type: "remote",
+                            tag: "domains-ruleset",
+                            format: "binary",
+                            url: remoteUrl,
+                            download_detour: "direct",
+                            update_interval: updateInterval
+                        }
+                    ],
+                    rules: [
+                        {
+                            protocol: "dns",
+                            action: "hijack-dns"
+                        },
+                        {
+                            ip_is_private: true,
+                            outbound: "direct"
+                        },
+                        {
+                            rule_set: "domains-ruleset",
+                            outbound: "direct"
+                        }
+                    ]
+                }
+            };
 
-        if (excludeDomains.length > 0) {
-            config.dns.rules.push({
-                domain_suffix: excludeDomains,
-                server: "local"
-            });
+            const jsonString = JSON.stringify(config, null, 2);
+            document.getElementById('jsonOutput').textContent = jsonString;
+            statusEl.textContent = '✔ Профиль успешно сгенерирован!';
+            statusEl.className = 'status-success';
+            return jsonString;
+        } catch (e) {
+            statusEl.textContent = e.message;
+            statusEl.className = 'status-error';
+            return null;
         }
-
-        if (allRedirectPackages.length > 0) {
-            config.dns.rules.push({
-                package_name: allRedirectPackages,
-                server: redirectObj.tag
-            });
-        }
-
-        if (customDomains.length > 0) {
-            config.dns.rules.push({
-                domain_suffix: customDomains,
-                server: redirectObj.tag
-            });
-        }
-
-        config.dns.rules.push({
-            rule_set: ruleSetTag,
-            server: redirectObj.tag
-        });
-
-        const json = JSON.stringify(config, null, 2);
-        const blob = new Blob([json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "singbox_config.json";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-        status.textContent =
-            "Конфигурация успешно создана!\n\n" +
-            `Redirect DNS -> ${redirectObj.tag} [${redirectObj.type}] (${redirectObj.url})\n` +
-            `Direct DNS   -> ${directObj.tag} [${directObj.type}] (${directObj.url})\n` +
-            `Rule-Set Tag -> ${ruleSetTag}\n\n` +
-            `Redirect приложений (по умолчанию + свои): ${allRedirectPackages.length}\n` +
-            `Исключено приложений (TUN Bypass): ${excludePackages.length}\n` +
-            `Исключено доменов (Local DNS): ${excludeDomains.length}`;
-    } catch (error) {
-        status.textContent = "Ошибка генерации:\n\n" + error.message;
     }
-}
 
-document.getElementById("generateButton").addEventListener("click", generateConfig);
+    function copyConfig() {
+        const json = generateConfig();
+        if (!json) return;
+        navigator.clipboard.writeText(json).then(() => {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '✔ Конфигурация скопирована в буфер обмена!';
+            statusEl.className = 'status-success';
+        });
+    }
+
+    function downloadConfig() {
+        const json = generateConfig();
+        if (!json) return;
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sing-box-profile.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Автогенерация при загрузке страницы
+    window.onload = generateConfig;
 </script>
 </body>
 </html>
