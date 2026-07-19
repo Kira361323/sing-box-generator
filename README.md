@@ -3,10 +3,6 @@
 Генератор DNS-профилей для [sing-box](https://github.com/SagerNet/sing-box) ≥ 1.11.
 Работает полностью в браузере — без бэкенда, без сбора данных.
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-89b4fa?style=for-the-badge&logo=github)](https://kira361323.github.io/sing-box-generator/)
-[![DNS Test](https://img.shields.io/badge/DNS_Test-Workflow-a6e3a1?style=for-the-badge&logo=githubactions)](https://github.com/Kira361323/sing-box-generator/actions/workflows/dns-test.yml)
-[![License](https://img.shields.io/badge/License-MIT-f9e2af?style=for-the-badge)](https://github.com/Kira361323/sing-box-generator/blob/main/LICENSE)
-
 ---
 
 ## ✨ Возможности
@@ -168,24 +164,3 @@ cd Dns-rules
 Бинарный `.srs`-файл со списком доменов. Домены из него маршрутизируются в Redirect DNS. Обновляется автоматически с заданным интервалом.
 
 ---
-
-## 📁 Структура проекта
-
-```
-Dns-rules/
-├── index.html              # Конфигуратор (GitHub Pages)
-├── README.md               # Этот файл
-├── LICENSE                 # MIT
-├── .github/
-│   └── workflows/
-│       └── dns-test.yml    # GitHub Action: тестер DNS
-└── assets/
-    └── screenshot.png      # Скриншот (опционально)
-```
-
----
-
-## 📜 Лицензия
-
-[MIT](LICENSE)
-```
