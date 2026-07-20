@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sing-Box DNS Configurator v3.6</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Sing-Box DNS Configurator v3.7</title>
 <style>
 :root{
   --bg:#1e1e2e;--surface:#181825;--card:#232334;--card2:#313244;
@@ -15,187 +12,83 @@
   --mauve:#cba6f7;--teal:#94e2d5;--peach:#fab387;
 }
 *{box-sizing:border-box}
-body{
-  font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  margin:0;padding:24px 16px 60px;display:flex;justify-content:center;min-height:100vh;
-}
-body::before{
-  content:"";position:fixed;inset:0;z-index:-2;
-  background-image:linear-gradient(rgba(137,180,250,.04) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(137,180,250,.04) 1px,transparent 1px);
-  background-size:36px 36px;
-}
-body::after{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:
-    radial-gradient(620px 420px at 88% -8%,rgba(137,180,250,.09),transparent 62%),
-    radial-gradient(520px 380px at -8% 34%,rgba(148,226,213,.07),transparent 60%),
-    radial-gradient(560px 420px at 62% 112%,rgba(203,166,247,.06),transparent 60%);
-}
+body{font-family:system-ui,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px 16px 60px;display:flex;justify-content:center;min-height:100vh}
 .container{width:100%;max-width:960px}
-
-/* ── Hero ── */
-.hero{margin-bottom:18px}
-.hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-.hero-kicker{font:500 .72rem 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
-h1{font:700 clamp(1.6rem,4vw,2.3rem)/1.1 'Space Grotesk',sans-serif;margin:0;letter-spacing:-.02em}
+h1{font-size:clamp(1.5rem,4vw,2.1rem);margin:0 0 4px;letter-spacing:-.02em}
 h1 em{font-style:normal;color:var(--accent)}
-.hero-meta{display:flex;gap:8px;flex-wrap:wrap;padding-top:6px}
-.chip{font:600 .7rem 'JetBrains Mono',monospace;padding:5px 10px;border:1px solid var(--border);border-radius:5px;color:var(--subtext);background:var(--surface)}
+.kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;font-family:monospace}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 22px}
+.chip{font-size:.7rem;font-family:monospace;padding:5px 10px;border:1px solid var(--border);border-radius:5px;color:var(--subtext);background:var(--surface)}
 .chip-ver{color:#11111b;background:var(--accent);border-color:var(--accent)}
-.term{
-  margin-top:16px;background:#11111b;border:1px solid var(--border);border-radius:8px;
-  padding:12px 16px;font:500 .82rem 'JetBrains Mono',monospace;color:var(--subtext);
-  display:flex;align-items:center;gap:8px;overflow-x:auto;white-space:nowrap;
-}
-.term-prompt{color:var(--green);font-weight:600}
-.term-file{color:var(--yellow)}
-.term-cursor{display:inline-block;width:8px;height:1.05em;background:var(--green);animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-
-/* ── Statusbar ── */
-.statusbar{
-  position:sticky;top:10px;z-index:50;display:flex;background:rgba(17,17,27,.94);
-  border:1px solid var(--border);border-radius:8px;margin-bottom:22px;overflow-x:auto;
-  box-shadow:0 6px 20px rgba(0,0,0,.35);
-}
-.sb-item{padding:9px 16px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px;min-width:86px;flex-shrink:0}
-.sb-item:last-child{border-right:0}
-.sb-label{font:500 .6rem 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.14em;color:var(--subtext)}
-.sb-val{font:600 .78rem 'JetBrains Mono',monospace;color:var(--accent);transition:color .2s}
-.sb-val.v-mauve{color:var(--mauve)}.sb-val.v-teal{color:var(--teal)}
-.sb-val.v-green{color:var(--green)}.sb-val.v-yellow{color:var(--yellow)}.sb-val.v-peach{color:var(--peach)}
-
-/* ── Sections ── */
-.section{
-  background:var(--card);border:1px solid var(--border);border-left:3px solid var(--sec,var(--accent));
-  border-radius:10px;padding:20px;margin-bottom:18px;
-}
+.section{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--sec,var(--accent));border-radius:10px;padding:20px;margin-bottom:18px}
 .sec-head{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:16px}
-.sec-num{font:700 .78rem 'JetBrains Mono',monospace;color:var(--sec,var(--accent))}
-h2{font:600 1.12rem 'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
-label{display:block;margin-bottom:6px;font:600 .84rem 'Space Grotesk',sans-serif}
-textarea,select,input{
-  width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;
-  padding:10px 12px;font:500 .85rem 'JetBrains Mono',monospace;margin-bottom:6px;
-  transition:border-color .2s,box-shadow .2s;
-}
+.sec-num{font-size:.78rem;font-family:monospace;color:var(--sec,var(--accent));font-weight:700}
+h2{font-size:1.1rem;margin:0}
+label{display:block;margin-bottom:6px;font-weight:600;font-size:.84rem}
+textarea,select,input[type=text],input[type=url]{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:monospace;font-size:.85rem;margin-bottom:6px}
 textarea{resize:vertical;margin-bottom:4px}
-textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(137,180,250,.13)}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--accent)}
 select{cursor:pointer}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .desc{font-size:.76rem;color:var(--subtext);margin:0 0 16px;line-height:1.55}
-.desc code{font:500 .72rem 'JetBrains Mono',monospace;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--teal)}
-.field-meta{font:500 .68rem 'JetBrains Mono',monospace;color:var(--subtext);margin:-2px 0 14px;text-align:right}
-.field-meta b{color:var(--yellow);font-weight:600}
+.desc code{font-family:monospace;font-size:.72rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--teal)}
+.field-meta{font-size:.68rem;font-family:monospace;color:var(--subtext);margin:-2px 0 14px;text-align:right}
+.field-meta b{color:var(--yellow)}
 .custom-dns-box{background:var(--surface);padding:12px;border-radius:6px;border:1px dashed var(--accent);margin-bottom:14px}
 .custom-dns-box label{font-size:.78rem;color:var(--accent)}
-
-/* ── Segmented switches ── */
 .seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;gap:4px;margin-bottom:14px}
 .seg input{display:none}
-.seg label{
-  flex:1;text-align:center;padding:9px 12px;border-radius:6px;margin:0;cursor:pointer;
-  font:600 .85rem 'Space Grotesk',sans-serif;color:var(--subtext);transition:all .2s;
-}
-.seg label:hover{color:var(--text);background:var(--card2)}
-.seg input:checked+label{background:var(--accent);color:#11111b;box-shadow:0 2px 12px rgba(137,180,250,.35)}
-.seg.seg-green input:checked+label{background:var(--green);box-shadow:0 2px 12px rgba(166,227,161,.3)}
-.seg.seg-yellow input:checked+label{background:var(--yellow);box-shadow:0 2px 12px rgba(249,226,175,.3)}
-
-/* ── Buttons / status ── */
-button.primary{
-  width:100%;background:var(--green);color:#11111b;border:0;border-radius:8px;padding:15px 20px;cursor:pointer;
-  font:700 1.02rem 'Space Grotesk',sans-serif;letter-spacing:.02em;
-  box-shadow:0 4px 18px rgba(166,227,161,.18);transition:transform .15s,box-shadow .2s,background .2s;
-}
-button.primary:hover{transform:translateY(-2px);background:#b9f0b3;box-shadow:0 8px 26px rgba(166,227,161,.3)}
-button.primary:active{transform:translateY(0)}
-.status{
-  margin-top:12px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:#11111b;
-  font:500 .78rem/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;color:var(--subtext);
-}
+.seg label{flex:1;text-align:center;padding:9px 12px;border-radius:6px;margin:0;cursor:pointer;font-weight:600;font-size:.85rem;color:var(--subtext)}
+.seg input:checked+label{background:var(--accent);color:#11111b}
+.seg.seg-green input:checked+label{background:var(--green)}
+.seg.seg-yellow input:checked+label{background:var(--yellow);color:#11111b}
+.check-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px}
+.check-row input{width:auto;margin:0}
+.check-row label{margin:0;font-weight:500;font-size:.84rem}
+button.primary{width:100%;background:var(--green);color:#11111b;border:0;border-radius:8px;padding:15px 20px;cursor:pointer;font-weight:700;font-size:1.02rem}
+button.primary:hover{background:#b9f0b3}
+.status{margin-top:12px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:#11111b;font-family:monospace;font-size:.78rem;line-height:1.6;white-space:pre-wrap;color:var(--subtext)}
 .status.ok{border-color:var(--green);color:var(--green)}
 .status.err{border-color:var(--red);color:var(--red)}
-
-/* ── Reveal ── */
-.js .section,.js .hero{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
-.js .section.visible,.js .hero.visible{opacity:1;transform:none}
-
-@media(max-width:640px){.grid{grid-template-columns:1fr}.sb-item{min-width:74px;padding:8px 10px}}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="container">
-
-<!-- HERO -->
-<header class="hero">
-  <div class="hero-row">
-    <div>
-      <div class="hero-kicker">// dns routing profile builder</div>
-      <h1>Sing-Box <em>DNS</em> Configurator</h1>
-    </div>
-    <div class="hero-meta">
-      <span class="chip chip-ver">v3.6</span>
-      <span class="chip">sing-box 1.11 – 1.14+</span>
-      <span class="chip">Android · Windows · Linux</span>
-      <span class="chip">offline</span>
-    </div>
-  </div>
-  <div class="term">
-    <span class="term-prompt">$</span> sing-box run -c <span class="term-file" id="termFile">android_....json</span><span class="term-cursor"></span>
-  </div>
-</header>
-
-<!-- STATUSBAR -->
-<div class="statusbar">
-  <div class="sb-item"><span class="sb-label">platform</span><span class="sb-val v-mauve" id="sbPlatform">android</span></div>
-  <div class="sb-item"><span class="sb-label">mode</span><span class="sb-val v-teal" id="sbMode">fixed</span></div>
-  <div class="sb-item"><span class="sb-label">syntax</span><span class="sb-val v-yellow" id="sbSyntax">modern</span></div>
-  <div class="sb-item"><span class="sb-label">bootstrap</span><span class="sb-val v-peach" id="sbBootstrap">custom</span></div>
-  <div class="sb-item"><span class="sb-label">redirect</span><span class="sb-val" id="sbRedirect">custom</span></div>
-  <div class="sb-item"><span class="sb-label">direct</span><span class="sb-val v-green" id="sbDirect">custom</span></div>
-  <div class="sb-item"><span class="sb-label">apps</span><span class="sb-val v-peach" id="sbApps">12</span></div>
+<div class="kicker">// dns routing profile builder</div>
+<h1>Sing-Box <em>DNS</em> Configurator</h1>
+<div class="meta">
+  <span class="chip chip-ver">v3.7</span>
+  <span class="chip">sing-box 1.11 – 1.14+</span>
+  <span class="chip">Android · Windows · Linux</span>
+  <span class="chip">offline</span>
 </div>
 
-<!-- 01 PLATFORM / MODE / SYNTAX -->
+<!-- 01 -->
 <div class="section" style="--sec:var(--mauve)">
   <div class="sec-head"><span class="sec-num">01</span><h2>Платформа, режим и версия синтаксиса</h2></div>
-
   <label>Целевая платформа</label>
-  <div class="seg" id="platformSeg">
+  <div class="seg">
     <input type="radio" name="platform" id="pf-android" value="android" checked><label for="pf-android">Android</label>
     <input type="radio" name="platform" id="pf-windows" value="windows"><label for="pf-windows">Windows</label>
     <input type="radio" name="platform" id="pf-linux" value="linux"><label for="pf-linux">Linux</label>
   </div>
-  <div class="desc">
-    <b>Android</b> — маршрутизация DNS по <code>package_name</code>, исключение приложений из TUN через <code>exclude_package</code>.<br>
-    <b>Windows / Linux</b> — маршрутизация DNS по <code>process_name</code>. Имя TUN-интерфейса на Windows назначается автоматически.
-  </div>
-
+  <div class="desc"><b>Android</b> — маршрутизация по <code>package_name</code>, исключение приложений из TUN через <code>exclude_package</code>.<br><b>Windows / Linux</b> — маршрутизация по <code>process_name</code>. Исключения приложений и чекбокс WhatsApp доступны только на Android.</div>
   <label>Режим профиля</label>
   <div class="seg seg-green">
     <input type="radio" name="profileMode" id="mode-fixed" value="fixed" checked><label for="mode-fixed">Фиксированный</label>
     <input type="radio" name="profileMode" id="mode-fallback" value="fallback"><label for="mode-fallback">Fallback</label>
   </div>
-  <div class="desc">
-    <b>Фиксированный</b> — один Redirect и один Direct DNS. Минимальный конфиг, предсказуемое поведение.<br>
-    <b>Fallback</b> — все DNS категории попадают в конфиг. Sing-box перебирает серверы при таймауте. Порядок в списке = приоритет.
-  </div>
-
+  <div class="desc"><b>Фиксированный</b> — один Redirect и один Direct DNS.<br><b>Fallback</b> — все DNS категории в конфиге, перебор при таймауте. Порядок = приоритет.</div>
   <label>Версия синтаксиса sing-box</label>
   <div class="seg seg-yellow">
     <input type="radio" name="syntaxVersion" id="syn-modern" value="modern" checked><label for="syn-modern">Modern (≥ 1.14)</label>
     <input type="radio" name="syntaxVersion" id="syn-legacy" value="legacy"><label for="syn-legacy">Legacy (1.11 – 1.13)</label>
   </div>
-  <div class="desc">
-    <b>Modern</b> — загрузка rule-set через <code>http_client: {"detour": "direct"}</code>. Без warning'ов на 1.14+.<br>
-    <b>Legacy</b> — загрузка rule-set через <code>download_detour: "direct"</code>. Для устройств на 1.11–1.13 (в 1.16 legacy вырежут).<br>
-    Поле <code>independent_cache</code> не генерируется ни в одной ветке — оно deprecated с 1.14, а его отсутствие валидно и на старых версиях.
-  </div>
+  <div class="desc"><b>Modern</b> — rule-set через <code>http_client: {"detour":"direct"}</code>, без warning на 1.14+.<br><b>Legacy</b> — rule-set через <code>download_detour</code> для устройств на 1.11–1.13.</div>
 </div>
 
-<!-- 02 SYSTEM -->
+<!-- 02 -->
 <div class="section" style="--sec:var(--accent)">
   <div class="sec-head"><span class="sec-num">02</span><h2>Системные параметры</h2></div>
   <div class="grid">
@@ -211,10 +104,7 @@ button.primary:active{transform:translateY(0)}
         <option value="debug">debug</option>
         <option value="trace">trace</option>
       </select>
-      <div class="desc">
-        <b>Отключены</b> — <code>"log": {"disabled": true}</code>, полное отключение.<br>
-        <b>panic</b> — только критические сбои. <b>error</b> — для диагностики. <b>debug/trace</b> — только для отладки.
-      </div>
+      <div class="desc"><b>Отключены</b> — <code>"log":{"disabled":true}</code>. <b>panic</b> — продакшен. <b>debug/trace</b> — только отладка.</div>
     </div>
     <div>
       <label for="updateInterval">Интервал обновления Rule-Set</label>
@@ -225,127 +115,121 @@ button.primary:active{transform:translateY(0)}
         <option value="24h" selected>24 часа</option>
         <option value="168h">7 дней</option>
       </select>
-      <div class="desc">Как часто sing-box скачивает обновлённый .srs-файл с доменами.</div>
+      <div class="desc">Частота загрузки .srs-файла с доменами.</div>
     </div>
   </div>
-
-  <label for="bootstrapSelect">Bootstrap DNS</label>
-  <select id="bootstrapSelect">
-    <option value="custom" selected>Свой IP</option>
-    <option value="8.8.8.8">Google Primary (8.8.8.8)</option>
-    <option value="8.8.4.4">Google Secondary (8.8.4.4)</option>
-    <option value="1.1.1.1">Cloudflare Primary (1.1.1.1)</option>
-    <option value="1.0.0.1">Cloudflare Secondary (1.0.0.1)</option>
-    <option value="9.9.9.9">Quad9 Primary (9.9.9.9)</option>
-    <option value="149.112.112.112">Quad9 Secondary (149.112.112.112)</option>
-    <option value="77.88.8.8">Яндекс Primary (77.88.8.8)</option>
-    <option value="77.88.8.1">Яндекс Secondary (77.88.8.1)</option>
-  </select>
-  <div id="bootstrapCustomBox" class="custom-dns-box">
-    <label for="bootstrapCustomIp">Свой Bootstrap IP</label>
-    <input id="bootstrapCustomIp" type="text" placeholder="Например: 77.88.8.7">
+  <div class="grid">
+    <div>
+      <label for="bootstrapSelect">Bootstrap DNS</label>
+      <select id="bootstrapSelect">
+        <option value="custom" selected>Свой IP</option>
+        <option value="8.8.8.8">Google Primary (8.8.8.8)</option>
+        <option value="8.8.4.4">Google Secondary (8.8.4.4)</option>
+        <option value="1.1.1.1">Cloudflare Primary (1.1.1.1)</option>
+        <option value="1.0.0.1">Cloudflare Secondary (1.0.0.1)</option>
+        <option value="9.9.9.9">Quad9 Primary (9.9.9.9)</option>
+        <option value="149.112.112.112">Quad9 Secondary (149.112.112.112)</option>
+        <option value="77.88.8.8">Яндекс Primary (77.88.8.8)</option>
+        <option value="77.88.8.1">Яндекс Secondary (77.88.8.1)</option>
+      </select>
+      <div id="bootstrapCustomBox" class="custom-dns-box"><label for="bootstrapCustomIp">Свой Bootstrap IP</label><input id="bootstrapCustomIp" type="text" placeholder="Например: 77.88.8.7"></div>
+      <div class="desc">UDP-DNS (:53), резолвит hostname DoH/DoT-серверов. Проверяй через <code>dig @IP xbox-dns.ru</code>.</div>
+    </div>
+    <div>
+      <label for="strategySelect">DNS Strategy</label>
+      <select id="strategySelect">
+        <option value="ipv4_only" selected>IPv4 only</option>
+        <option value="prefer_ipv4">Prefer IPv4</option>
+        <option value="prefer_ipv6">Prefer IPv6</option>
+        <option value="ipv6_only">IPv6 only</option>
+      </select>
+      <div class="desc"><b>IPv4 only</b> убирает таймауты, если провайдер не маршрутизирует IPv6.</div>
+      <label for="mtuSelect">MTU TUN-интерфейса</label>
+      <select id="mtuSelect">
+        <option value="1280">1280</option>
+        <option value="1360">1360</option>
+        <option value="1400" selected>1400</option>
+        <option value="1500">1500</option>
+      </select>
+      <div class="desc">Если на WiFi приложения резолвятся, но данные не проходят — снизь до 1280/1360 (проверка MTU-гипотезы).</div>
+    </div>
   </div>
-  <div class="desc">
-    Плоский UDP-DNS (порт 53), который резолвит hostname ваших DoH/DoT-серверов в IP-адреса. Без него sing-box не знает, куда подключаться. Проверяйте через <code>dig @IP xbox-dns.ru</code>.
-  </div>
-
-  <label for="strategySelect">DNS Strategy</label>
-  <select id="strategySelect">
-    <option value="ipv4_only" selected>IPv4 only</option>
-    <option value="prefer_ipv4">Prefer IPv4</option>
-    <option value="prefer_ipv6">Prefer IPv6</option>
-    <option value="ipv6_only">IPv6 only</option>
-  </select>
-  <div class="desc">
-    <b>IPv4 only</b> — только A-записи. Убирает таймауты, если провайдер не маршрутизирует IPv6.
-  </div>
-
   <label for="remoteUrl">Remote Rule-Set URL</label>
   <input id="remoteUrl" type="url" placeholder="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
-  <div class="desc">
-    Оставьте поле пустым — будет использована ссылка по умолчанию (Dns-rules). Либо укажите свой .srs-файл.
-  </div>
+  <div class="desc">Пусто = ссылка по умолчанию (Dns-rules). Иначе — свой .srs.</div>
 </div>
 
-<!-- 03 DNS SELECT -->
+<!-- 03 -->
 <div class="section" id="dnsSelectSection" style="--sec:var(--teal)">
   <div class="sec-head"><span class="sec-num">03</span><h2>Выбор DNS-серверов</h2></div>
   <div class="grid">
     <div>
       <label for="redirectSelect">DNS для Redirect</label>
       <select id="redirectSelect"><option value="custom" selected>Свой DNS</option></select>
-      <div id="redirectCustomBox" class="custom-dns-box">
-        <label for="redirectCustomUrl">Свой Redirect DNS</label>
-        <input id="redirectCustomUrl" type="text" placeholder="dns.example.com или https://doh.example.com/query">
-      </div>
-      <div class="desc">Обслуживает приложения из списка, свои домены и домены из Rule-Set. Формат: hostname (DoT/DoH) или полный URL (DoH с кастомным путём).</div>
+      <div id="redirectCustomBox" class="custom-dns-box"><label for="redirectCustomUrl">Свой Redirect DNS</label><input id="redirectCustomUrl" type="text" placeholder="dns.example.com или https://doh.example.com/query"></div>
+      <div class="desc">Приложения из списка, свои домены, домены из Rule-Set. Формат: hostname или полный URL.</div>
     </div>
     <div>
       <label for="directSelect">DNS для Direct</label>
       <select id="directSelect"><option value="custom" selected>Свой DNS</option></select>
-      <div id="directCustomBox" class="custom-dns-box">
-        <label for="directCustomUrl">Свой Direct DNS</label>
-        <input id="directCustomUrl" type="text" placeholder="dns.example.com или https://doh.example.com/query">
-      </div>
-      <div class="desc">Обслуживает весь остальной трафик (final). Обычно — быстрый DNS с фильтрацией рекламы.</div>
+      <div id="directCustomBox" class="custom-dns-box"><label for="directCustomUrl">Свой Direct DNS</label><input id="directCustomUrl" type="text" placeholder="dns.example.com или https://doh.example.com/query"></div>
+      <div class="desc">Весь остальной трафик (final).</div>
     </div>
   </div>
 </div>
 
-<!-- 04 ROUTING -->
+<!-- 04 -->
 <div class="section" style="--sec:var(--green)">
   <div class="sec-head"><span class="sec-num">04</span><h2>Маршрутизация в Redirect DNS</h2></div>
   <label for="customDomains">Свои домены для Redirect</label>
   <textarea id="customDomains" rows="3"></textarea>
   <div class="field-meta">доменов: <b id="domainsCount">0</b></div>
-  <div class="desc">Домены, которые пойдут через Redirect DNS. По одному на строку или через запятую. Пусто = не добавлять.</div>
+  <div class="desc">По одному на строку или через запятую. Пусто = не добавлять.</div>
   <label for="customApps" id="appsLabel">Package name для Redirect</label>
   <textarea id="customApps" rows="6"></textarea>
-  <div class="field-meta">база: <b id="appsBase">12</b> · своих: <b id="appsCustom">0</b></div>
-  <div class="desc" id="appsDesc">Android-приложения, чьи DNS-запросы пойдут через Redirect DNS. Базовые 12 уже включены.</div>
+  <div class="field-meta">база: <b id="appsBase">13</b> · своих: <b id="appsCustom">0</b></div>
+  <div class="desc" id="appsDesc">Android-приложения, чьи DNS-запросы пойдут через Redirect. База включает AI-пакеты и Google (для Gemini). Весь трафик перечисленных приложений идёт в Redirect-DNS.</div>
 </div>
 
-<!-- 05 EXCLUSIONS -->
+<!-- 05 -->
 <div class="section" style="--sec:var(--red)">
   <div class="sec-head"><span class="sec-num">05</span><h2>Исключения</h2></div>
   <label for="excludeDomains">Домены → Direct DNS</label>
   <textarea id="excludeDomains" rows="3"></textarea>
-  <div class="desc">Домены, исключённые из Redirect. Пойдут через Direct DNS, даже если приложение или Rule-Set указывает на Redirect. Приоритет выше, чем у правил по приложениям.</div>
+  <div class="desc">Исключены из Redirect, пойдут через Direct даже при совпадении с пакетом/Rule-Set. Приоритет выше.</div>
   <div id="excludeAppsBlock">
-    <label for="excludeApps">Package name → Исключение из TUN</label>
+    <div class="check-row">
+      <input type="checkbox" id="excludeWhatsapp" checked>
+      <label for="excludeWhatsapp">Исключить WhatsApp из TUN</label>
+    </div>
+    <div class="desc">WhatsApp идёт напрямую, минуя sing-box. Убирает фоновый шум/таймауты мессенджера из логов и нечувствительно к версии приложения. WhatsApp в РФ ходит напрямую без проблем.</div>
+    <label for="excludeApps">Доп. package name → исключение из TUN</label>
     <textarea id="excludeApps" rows="3"></textarea>
-    <div class="desc">Приложения, полностью исключённые из маршрутизации через TUN-интерфейс (<code>inbounds.exclude_package</code>). Их трафик идёт напрямую, минуя sing-box. Только для Android.</div>
+    <div class="desc">Приложения, полностью минующие TUN (<code>inbounds.exclude_package</code>). Банковские и т.п.</div>
   </div>
 </div>
 
-<!-- GENERATE -->
 <button class="primary" id="generateButton">Скачать конфигурацию (.json)</button>
-<div id="status" class="status">Готово к генерации. Заполните параметры и нажмите кнопку.</div>
+<div id="status" class="status">Готово к генерации.</div>
 </div>
 
 <script>
-document.body.classList.add('js');
-
-const DEFAULT_RULESET_URL="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
-
 const PLATFORMS={
   android:{
     appField:"package_name",tunExclude:"exclude_package",interfaceName:"tun0",
-    defaultApps:["com.openai.chatgpt","com.anthropic.claude","com.microsoft.copilot","com.deepl.mobiletranslator","com.deepseek.chat","com.google.android.apps.bard","ai.x.grok","ai.leonardo.leonardo","ai.mistral.chat","com.google.android.apps.labs.language.tailwind","ai.qwenlm.chat.android","com.suno.android"],
+    defaultApps:["com.openai.chatgpt","com.anthropic.claude","com.microsoft.copilot","com.deepl.mobiletranslator","com.deepseek.chat","com.google.android.apps.bard","ai.x.grok","ai.leonardo.leonardo","ai.mistral.chat","com.google.android.apps.labs.language.tailwind","ai.qwenlm.chat.android","com.suno.android","com.google.android.googlequicksearchbox"],
     appsLabel:"Package name для Redirect",
-    appsDesc:"Android-приложения, чьи DNS-запросы пойдут через Redirect DNS. По одному на строку. Базовые 12 (AI) уже включены. Пусто = только базовые."
+    appsDesc:"Android-приложения, чьи DNS-запросы пойдут через Redirect. База включает AI-пакеты и Google (для Gemini). Весь трафик перечисленных приложений идёт в Redirect-DNS."
   },
   windows:{
-    appField:"process_name",tunExclude:null,interfaceName:null,
-    defaultApps:[],
+    appField:"process_name",tunExclude:null,interfaceName:null,defaultApps:[],
     appsLabel:"Process name для Redirect (.exe)",
-    appsDesc:"Имена процессов Windows, чьи DNS-запросы пойдут через Redirect DNS. Например: Claude.exe, msedge.exe. Имя процесса можно посмотреть в Диспетчере задач. Базовый список пуст — впишите свои."
+    appsDesc:"Имена процессов Windows (например Claude.exe). Базовый список пуст — впиши свои."
   },
   linux:{
-    appField:"process_name",tunExclude:null,interfaceName:"tun0",
-    defaultApps:[],
+    appField:"process_name",tunExclude:null,interfaceName:"tun0",defaultApps:[],
     appsLabel:"Process name для Redirect",
-    appsDesc:"Имена процессов Linux, чьи DNS-запросы пойдут через Redirect DNS. Например: claude, firefox. Имя процесса можно посмотреть через ps или htop. Базовый список пуст — впишите свои."
+    appsDesc:"Имена процессов Linux (например claude, firefox). Базовый список пуст — впиши свои."
   }
 };
 
@@ -410,21 +294,21 @@ const DIRECT_DNS=[
 {name:"Tiarap Org (DoH)",host:"doh.tiarap.org",type:"https",tag:"tiarap-doh"}
 ];
 
-/* ── helpers ── */
 const $=id=>document.getElementById(id);
-function getPlatform(){return document.querySelector('input[name="platform"]:checked').value;}
-function getMode(){return document.querySelector('input[name="profileMode"]:checked').value;}
-function getSyntax(){return document.querySelector('input[name="syntaxVersion"]:checked').value;}
-function parseInput(id){const v=$(id).value.trim();return v?[...new Set(v.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean))]:[];}
+const getPlatform=()=>document.querySelector('input[name="platform"]:checked').value;
+const getMode=()=>document.querySelector('input[name="profileMode"]:checked').value;
+const getSyntax=()=>document.querySelector('input[name="syntaxVersion"]:checked').value;
+const parseInput=id=>{const v=$(id).value.trim();return v?[...new Set(v.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean))]:[];};
+const pad=n=>String(n).padStart(2,"0");
+const fileName=k=>{const n=new Date();return `${k}_${n.getFullYear()}_${pad(n.getMonth()+1)}_${pad(n.getDate())}_${pad(n.getHours())}_${pad(n.getMinutes())}.json`;};
+
 function buildServerObj(d,bs){const o={type:d.type,tag:d.tag,server:d.host,domain_resolver:bs};if(d.port)o.server_port=d.port;if(d.path)o.path=d.path;return o;}
 function fillSelect(id,list){const s=$(id);list.forEach(d=>{const o=document.createElement("option");o.value=JSON.stringify(d);o.textContent=d.name;s.appendChild(o);});}
-function handleCustom(selId,boxId){$(selId).addEventListener("change",function(){$(boxId).style.display=this.value==="custom"?"block":"none";});}
-function pad(n){return String(n).padStart(2,"0");}
-function fileName(pfKey){const n=new Date();return `${pfKey}_${n.getFullYear()}_${pad(n.getMonth()+1)}_${pad(n.getDate())}_${pad(n.getHours())}_${pad(n.getMinutes())}.json`;}
+function handleCustom(s,b){$(s).addEventListener("change",function(){$(b).style.display=this.value==="custom"?"block":"none";});}
 
 function getBootstrap(){
   const v=$("bootstrapSelect").value;
-  if(v==="custom"){const ip=$("bootstrapCustomIp").value.trim();if(!ip)throw new Error("Введите IP Bootstrap DNS (или выберите из списка).");return ip;}
+  if(v==="custom"){const ip=$("bootstrapCustomIp").value.trim();if(!ip)throw new Error("Введите IP Bootstrap DNS.");return ip;}
   return v;
 }
 function parseCustomDns(inputId,tag){
@@ -438,7 +322,6 @@ function parseCustomDns(inputId,tag){
 }
 function parseDns(selId,inputId,tag){const v=$(selId).value;if(v==="custom")return parseCustomDns(inputId,tag);return JSON.parse(v);}
 
-/* ── platform apply ── */
 function applyPlatform(){
   const pf=PLATFORMS[getPlatform()];
   $("appsLabel").textContent=pf.appsLabel;
@@ -446,38 +329,26 @@ function applyPlatform(){
   $("excludeAppsBlock").style.display=pf.tunExclude?"block":"none";
   updateLive();
 }
-
-/* ── live statusbar / counters / filename ── */
 function selTag(selId){const v=$(selId).value;return v==="custom"?"custom":JSON.parse(v).tag;}
 function updateLive(){
   const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
-  $("sbPlatform").textContent=pfKey;
-  $("sbMode").textContent=getMode();
-  $("sbSyntax").textContent=getSyntax();
-  const bs=$("bootstrapSelect").value;
-  $("sbBootstrap").textContent=bs==="custom"?($("bootstrapCustomIp").value.trim()||"custom"):bs;
-  $("sbRedirect").textContent=getMode()==="fixed"?selTag("redirectSelect"):`все ${REDIRECT_DNS.length}`;
-  $("sbDirect").textContent=getMode()==="fixed"?selTag("directSelect"):`все ${DIRECT_DNS.length}`;
   const custom=parseInput("customApps").length;
-  $("sbApps").textContent=pf.defaultApps.length+custom;
   $("appsBase").textContent=pf.defaultApps.length;
   $("appsCustom").textContent=custom;
   $("domainsCount").textContent=parseInput("customDomains").length;
-  $("termFile").textContent=fileName(pfKey);
 }
 
-/* ── generator ── */
 function generateConfig(){
   const status=$("status");
   try{
     const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
-    const mode=getMode();
-    const syntax=getSyntax();
+    const mode=getMode(),syntax=getSyntax();
     const logLevel=$("logLevelSelect").value;
     const strategy=$("strategySelect").value;
+    const mtu=parseInt($("mtuSelect").value,10);
     const bootstrapIp=getBootstrap();
     const userUrl=$("remoteUrl").value.trim();
-    const remoteUrl=userUrl||DEFAULT_RULESET_URL;
+    const remoteUrl=userUrl||"https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
     const updateInterval=$("updateInterval").value;
 
     const fn=remoteUrl.split("/").pop().split("?")[0],bn=fn.replace(".srs","");
@@ -486,7 +357,11 @@ function generateConfig(){
     const customDomains=parseInput("customDomains");
     const allApps=[...new Set([...pf.defaultApps,...parseInput("customApps")])];
     const exclDomains=parseInput("excludeDomains");
-    const exclApps=pf.tunExclude?parseInput("excludeApps"):[];
+
+    // исключения приложений + пресет WhatsApp (только Android)
+    let exclApps=parseInput("excludeApps");
+    let waExcluded=false;
+    if(pf.tunExclude&&$("excludeWhatsapp").checked){exclApps=[...new Set([...exclApps,"com.whatsapp"])];waExcluded=true;}
 
     const servers=[{type:"udp",tag:"bootstrap",server:bootstrapIp}];
     let rTag,dTag;
@@ -504,27 +379,23 @@ function generateConfig(){
     const tun={type:"tun",tag:"tun-in"};
     if(pf.interfaceName)tun.interface_name=pf.interfaceName;
     tun.address=["172.19.0.1/30"];
-    tun.auto_route=true;tun.strict_route=true;tun.stack="gvisor";tun.mtu=1400;
+    tun.auto_route=true;tun.strict_route=true;tun.stack="gvisor";tun.mtu=mtu;
     if(pf.tunExclude&&exclApps.length)tun[pf.tunExclude]=exclApps;
 
     const config={};
     config.log=logLevel==="off"?{disabled:true}:{level:logLevel,timestamp:true};
-    // independent_cache НЕ добавляем ни в одной ветке (deprecated 1.14, валидно без него везде)
     config.dns={servers,rules:[],final:dTag,strategy};
     config.inbounds=[tun];
     config.outbounds=[{type:"direct",tag:"direct"}];
 
-    // rule-set: ветвление по версии синтаксиса
     const ruleSetEntry={type:"remote",tag:rsTag,format:"binary",url:remoteUrl,update_interval:updateInterval};
-    if(syntax==="modern"){
-      ruleSetEntry.http_client={detour:"direct"};   // ≥ 1.14
-    }else{
-      ruleSetEntry.download_detour="direct";        // 1.11 – 1.13
-    }
+    if(syntax==="modern")ruleSetEntry.http_client={detour:"direct"};
+    else ruleSetEntry.download_detour="direct";
 
+    // port=53 hijack убран: sniff+protocol=dns покрывает UDP-DNS, а правило по порту ловило QUIC-мусор (bad question name)
     config.route={
       rule_set:[ruleSetEntry],
-      rules:[{action:"sniff"},{protocol:"dns",action:"hijack-dns"},{port:853,action:"hijack-dns"},{port:53,action:"hijack-dns"},{ip_is_private:true,outbound:"direct"}],
+      rules:[{action:"sniff"},{protocol:"dns",action:"hijack-dns"},{port:853,action:"hijack-dns"},{ip_is_private:true,outbound:"direct"}],
       default_domain_resolver:"bootstrap",auto_detect_interface:true,final:"direct"
     };
 
@@ -539,25 +410,21 @@ function generateConfig(){
     a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
 
-    const rsField=syntax==="modern"?'http_client: {"detour":"direct"}':'download_detour: "direct"';
     status.className="status ok";
     status.textContent=
 `✓ Конфигурация создана: ${fname}
 
 Платформа: ${pfKey} (${pf.appField})
 Режим: ${mode==="fixed"?"Фиксированный":"Fallback"}
-Синтаксис: ${syntax==="modern"?"modern (≥ 1.14)":"legacy (1.11 – 1.13)"}
-Rule-Set загрузка: ${rsField}
-Bootstrap: ${bootstrapIp}
-Strategy: ${strategy}
-Логи: ${logLevel==="off"?"disabled: true":logLevel}
-Redirect → ${rTag}
-Direct → ${dTag}
-Rule-Set → ${rsTag} ${userUrl?"(свой URL)":"(URL по умолчанию)"}
+Синтаксис: ${syntax==="modern"?"modern (≥1.14)":"legacy (1.11–1.13)"}
+Bootstrap: ${bootstrapIp} | Strategy: ${strategy} | MTU: ${mtu}
+Логи: ${logLevel==="off"?"disabled:true":logLevel}
+Redirect → ${rTag} | Direct → ${dTag}
+Rule-Set → ${rsTag} ${userUrl?"(свой URL)":"(по умолчанию)"}
 DNS-серверов: ${servers.length-1}
 
 Приложений в Redirect: ${allApps.length}
-Исключено из TUN: ${exclApps.length}
+Исключено из TUN: ${exclApps.length}${waExcluded?" (WhatsApp включён)":""}
 Исключено доменов (→ Direct): ${exclDomains.length}`;
   }catch(e){
     status.className="status err";
@@ -565,7 +432,6 @@ DNS-серверов: ${servers.length-1}
   }
 }
 
-/* ── init ── */
 window.addEventListener("DOMContentLoaded",()=>{
   fillSelect("redirectSelect",REDIRECT_DNS);
   fillSelect("directSelect",DIRECT_DNS);
@@ -573,21 +439,12 @@ window.addEventListener("DOMContentLoaded",()=>{
   handleCustom("directSelect","directCustomBox");
   handleCustom("bootstrapSelect","bootstrapCustomBox");
   $("dnsSelectSection").style.display=getMode()==="fixed"?"block":"none";
-
   document.querySelectorAll('input[name="platform"]').forEach(r=>r.addEventListener("change",applyPlatform));
-  document.querySelectorAll('input[name="profileMode"]').forEach(r=>r.addEventListener("change",()=>{
-    $("dnsSelectSection").style.display=getMode()==="fixed"?"block":"none";updateLive();
-  }));
-  document.querySelectorAll('input[name="syntaxVersion"]').forEach(r=>r.addEventListener("change",updateLive));
+  document.querySelectorAll('input[name="profileMode"]').forEach(r=>r.addEventListener("change",()=>{$("dnsSelectSection").style.display=getMode()==="fixed"?"block":"none";updateLive();}));
   ["bootstrapSelect","redirectSelect","directSelect","bootstrapCustomIp","customDomains","customApps","excludeDomains","excludeApps"]
     .forEach(id=>$(id).addEventListener("input",updateLive));
   $("generateButton").addEventListener("click",generateConfig);
-
   applyPlatform();
-  setInterval(updateLive,30000); // держим время в имени файла свежим
-
-  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");io.unobserve(e.target);}}),{threshold:.06});
-  document.querySelectorAll(".section,.hero").forEach(s=>io.observe(s));
 });
 </script>
 </body>
