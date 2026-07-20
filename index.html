@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sing-Box DNS Configurator v3.5</title>
+<title>Sing-Box DNS Configurator v3.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -101,6 +101,7 @@ select{cursor:pointer}
 .seg label:hover{color:var(--text);background:var(--card2)}
 .seg input:checked+label{background:var(--accent);color:#11111b;box-shadow:0 2px 12px rgba(137,180,250,.35)}
 .seg.seg-green input:checked+label{background:var(--green);box-shadow:0 2px 12px rgba(166,227,161,.3)}
+.seg.seg-yellow input:checked+label{background:var(--yellow);box-shadow:0 2px 12px rgba(249,226,175,.3)}
 
 /* ── Buttons / status ── */
 button.primary{
@@ -135,9 +136,10 @@ button.primary:active{transform:translateY(0)}
       <h1>Sing-Box <em>DNS</em> Configurator</h1>
     </div>
     <div class="hero-meta">
-      <span class="chip chip-ver">v3.5</span>
-      <span class="chip">sing-box ≥ 1.11</span>
+      <span class="chip chip-ver">v3.6</span>
+      <span class="chip">sing-box 1.11 – 1.14+</span>
       <span class="chip">Android · Windows · Linux</span>
+      <span class="chip">offline</span>
     </div>
   </div>
   <div class="term">
@@ -149,15 +151,17 @@ button.primary:active{transform:translateY(0)}
 <div class="statusbar">
   <div class="sb-item"><span class="sb-label">platform</span><span class="sb-val v-mauve" id="sbPlatform">android</span></div>
   <div class="sb-item"><span class="sb-label">mode</span><span class="sb-val v-teal" id="sbMode">fixed</span></div>
-  <div class="sb-item"><span class="sb-label">bootstrap</span><span class="sb-val v-yellow" id="sbBootstrap">custom</span></div>
+  <div class="sb-item"><span class="sb-label">syntax</span><span class="sb-val v-yellow" id="sbSyntax">modern</span></div>
+  <div class="sb-item"><span class="sb-label">bootstrap</span><span class="sb-val v-peach" id="sbBootstrap">custom</span></div>
   <div class="sb-item"><span class="sb-label">redirect</span><span class="sb-val" id="sbRedirect">custom</span></div>
   <div class="sb-item"><span class="sb-label">direct</span><span class="sb-val v-green" id="sbDirect">custom</span></div>
   <div class="sb-item"><span class="sb-label">apps</span><span class="sb-val v-peach" id="sbApps">12</span></div>
 </div>
 
-<!-- 01 PLATFORM & MODE -->
+<!-- 01 PLATFORM / MODE / SYNTAX -->
 <div class="section" style="--sec:var(--mauve)">
-  <div class="sec-head"><span class="sec-num">01</span><h2>Платформа и режим профиля</h2></div>
+  <div class="sec-head"><span class="sec-num">01</span><h2>Платформа, режим и версия синтаксиса</h2></div>
+
   <label>Целевая платформа</label>
   <div class="seg" id="platformSeg">
     <input type="radio" name="platform" id="pf-android" value="android" checked><label for="pf-android">Android</label>
@@ -168,6 +172,7 @@ button.primary:active{transform:translateY(0)}
     <b>Android</b> — маршрутизация DNS по <code>package_name</code>, исключение приложений из TUN через <code>exclude_package</code>.<br>
     <b>Windows / Linux</b> — маршрутизация DNS по <code>process_name</code>. Имя TUN-интерфейса на Windows назначается автоматически.
   </div>
+
   <label>Режим профиля</label>
   <div class="seg seg-green">
     <input type="radio" name="profileMode" id="mode-fixed" value="fixed" checked><label for="mode-fixed">Фиксированный</label>
@@ -176,6 +181,17 @@ button.primary:active{transform:translateY(0)}
   <div class="desc">
     <b>Фиксированный</b> — один Redirect и один Direct DNS. Минимальный конфиг, предсказуемое поведение.<br>
     <b>Fallback</b> — все DNS категории попадают в конфиг. Sing-box перебирает серверы при таймауте. Порядок в списке = приоритет.
+  </div>
+
+  <label>Версия синтаксиса sing-box</label>
+  <div class="seg seg-yellow">
+    <input type="radio" name="syntaxVersion" id="syn-modern" value="modern" checked><label for="syn-modern">Modern (≥ 1.14)</label>
+    <input type="radio" name="syntaxVersion" id="syn-legacy" value="legacy"><label for="syn-legacy">Legacy (1.11 – 1.13)</label>
+  </div>
+  <div class="desc">
+    <b>Modern</b> — загрузка rule-set через <code>http_client: {"detour": "direct"}</code>. Без warning'ов на 1.14+.<br>
+    <b>Legacy</b> — загрузка rule-set через <code>download_detour: "direct"</code>. Для устройств на 1.11–1.13 (в 1.16 legacy вырежут).<br>
+    Поле <code>independent_cache</code> не генерируется ни в одной ветке — оно deprecated с 1.14, а его отсутствие валидно и на старых версиях.
   </div>
 </div>
 
@@ -247,7 +263,7 @@ button.primary:active{transform:translateY(0)}
   <label for="remoteUrl">Remote Rule-Set URL</label>
   <input id="remoteUrl" type="url" placeholder="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
   <div class="desc">
-    Оставьте поле пустым — будет использована ссылка по умолчанию (Dns-rules). Либо укажите свой .srs-файл. Загружается через <code>download_detour: "direct"</code>.
+    Оставьте поле пустым — будет использована ссылка по умолчанию (Dns-rules). Либо укажите свой .srs-файл.
   </div>
 </div>
 
@@ -398,6 +414,7 @@ const DIRECT_DNS=[
 const $=id=>document.getElementById(id);
 function getPlatform(){return document.querySelector('input[name="platform"]:checked').value;}
 function getMode(){return document.querySelector('input[name="profileMode"]:checked').value;}
+function getSyntax(){return document.querySelector('input[name="syntaxVersion"]:checked').value;}
 function parseInput(id){const v=$(id).value.trim();return v?[...new Set(v.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean))]:[];}
 function buildServerObj(d,bs){const o={type:d.type,tag:d.tag,server:d.host,domain_resolver:bs};if(d.port)o.server_port=d.port;if(d.path)o.path=d.path;return o;}
 function fillSelect(id,list){const s=$(id);list.forEach(d=>{const o=document.createElement("option");o.value=JSON.stringify(d);o.textContent=d.name;s.appendChild(o);});}
@@ -436,6 +453,7 @@ function updateLive(){
   const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
   $("sbPlatform").textContent=pfKey;
   $("sbMode").textContent=getMode();
+  $("sbSyntax").textContent=getSyntax();
   const bs=$("bootstrapSelect").value;
   $("sbBootstrap").textContent=bs==="custom"?($("bootstrapCustomIp").value.trim()||"custom"):bs;
   $("sbRedirect").textContent=getMode()==="fixed"?selTag("redirectSelect"):`все ${REDIRECT_DNS.length}`;
@@ -454,6 +472,7 @@ function generateConfig(){
   try{
     const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
     const mode=getMode();
+    const syntax=getSyntax();
     const logLevel=$("logLevelSelect").value;
     const strategy=$("strategySelect").value;
     const bootstrapIp=getBootstrap();
@@ -490,11 +509,21 @@ function generateConfig(){
 
     const config={};
     config.log=logLevel==="off"?{disabled:true}:{level:logLevel,timestamp:true};
-    config.dns={servers,rules:[],final:dTag,strategy,independent_cache:true};
+    // independent_cache НЕ добавляем ни в одной ветке (deprecated 1.14, валидно без него везде)
+    config.dns={servers,rules:[],final:dTag,strategy};
     config.inbounds=[tun];
     config.outbounds=[{type:"direct",tag:"direct"}];
+
+    // rule-set: ветвление по версии синтаксиса
+    const ruleSetEntry={type:"remote",tag:rsTag,format:"binary",url:remoteUrl,update_interval:updateInterval};
+    if(syntax==="modern"){
+      ruleSetEntry.http_client={detour:"direct"};   // ≥ 1.14
+    }else{
+      ruleSetEntry.download_detour="direct";        // 1.11 – 1.13
+    }
+
     config.route={
-      rule_set:[{type:"remote",tag:rsTag,format:"binary",url:remoteUrl,update_interval:updateInterval,download_detour:"direct"}],
+      rule_set:[ruleSetEntry],
       rules:[{action:"sniff"},{protocol:"dns",action:"hijack-dns"},{port:853,action:"hijack-dns"},{port:53,action:"hijack-dns"},{ip_is_private:true,outbound:"direct"}],
       default_domain_resolver:"bootstrap",auto_detect_interface:true,final:"direct"
     };
@@ -510,12 +539,15 @@ function generateConfig(){
     a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
 
+    const rsField=syntax==="modern"?'http_client: {"detour":"direct"}':'download_detour: "direct"';
     status.className="status ok";
     status.textContent=
 `✓ Конфигурация создана: ${fname}
 
 Платформа: ${pfKey} (${pf.appField})
 Режим: ${mode==="fixed"?"Фиксированный":"Fallback"}
+Синтаксис: ${syntax==="modern"?"modern (≥ 1.14)":"legacy (1.11 – 1.13)"}
+Rule-Set загрузка: ${rsField}
 Bootstrap: ${bootstrapIp}
 Strategy: ${strategy}
 Логи: ${logLevel==="off"?"disabled: true":logLevel}
@@ -546,6 +578,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll('input[name="profileMode"]').forEach(r=>r.addEventListener("change",()=>{
     $("dnsSelectSection").style.display=getMode()==="fixed"?"block":"none";updateLive();
   }));
+  document.querySelectorAll('input[name="syntaxVersion"]').forEach(r=>r.addEventListener("change",updateLive));
   ["bootstrapSelect","redirectSelect","directSelect","bootstrapCustomIp","customDomains","customApps","excludeDomains","excludeApps"]
     .forEach(id=>$(id).addEventListener("input",updateLive));
   $("generateButton").addEventListener("click",generateConfig);
