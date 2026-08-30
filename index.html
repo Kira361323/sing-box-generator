@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sing-Box DNS Configurator v3.7</title>
+<title>Sing-Box DNS Configurator v3.8</title>
 <style>
 :root{
   --bg:#1e1e2e;--surface:#181825;--card:#232334;--card2:#313244;
@@ -58,12 +58,11 @@ button.primary:hover{background:#b9f0b3}
 <div class="kicker">// dns routing profile builder</div>
 <h1>Sing-Box <em>DNS</em> Configurator</h1>
 <div class="meta">
-  <span class="chip chip-ver">v3.7</span>
-  <span class="chip">sing-box 1.11 – 1.14+</span>
+  <span class="chip chip-ver">v3.8</span>
+  <span class="chip">sing-box 1.11 – 1.15+</span>
   <span class="chip">Android · Windows · Linux</span>
   <span class="chip">offline</span>
 </div>
-
 <!-- 01 -->
 <div class="section" style="--sec:var(--mauve)">
   <div class="sec-head"><span class="sec-num">01</span><h2>Платформа, режим и версия синтаксиса</h2></div>
@@ -85,9 +84,8 @@ button.primary:hover{background:#b9f0b3}
     <input type="radio" name="syntaxVersion" id="syn-modern" value="modern" checked><label for="syn-modern">Modern (≥ 1.14)</label>
     <input type="radio" name="syntaxVersion" id="syn-legacy" value="legacy"><label for="syn-legacy">Legacy (1.11 – 1.13)</label>
   </div>
-  <div class="desc"><b>Modern</b> — rule-set через <code>http_client: {"detour":"direct"}</code>, без warning на 1.14+.<br><b>Legacy</b> — rule-set через <code>download_detour</code> для устройств на 1.11–1.13.</div>
+  <div class="desc"><b>Modern (≥ 1.14)</b> — rule-set скачивается через выделенный <code>http_clients</code> + <code>route.default_http_client</code>: dial direct, без deprecation-warning и без detour-ошибок.<br><b>Legacy (1.11–1.13)</b> — rule-set через <code>download_detour</code> (поле удалено из sing-box в 1.16).</div>
 </div>
-
 <!-- 02 -->
 <div class="section" style="--sec:var(--accent)">
   <div class="sec-head"><span class="sec-num">02</span><h2>Системные параметры</h2></div>
@@ -158,7 +156,6 @@ button.primary:hover{background:#b9f0b3}
   <input id="remoteUrl" type="url" placeholder="https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs">
   <div class="desc">Пусто = ссылка по умолчанию (Dns-rules). Иначе — свой .srs.</div>
 </div>
-
 <!-- 03 -->
 <div class="section" id="dnsSelectSection" style="--sec:var(--teal)">
   <div class="sec-head"><span class="sec-num">03</span><h2>Выбор DNS-серверов</h2></div>
@@ -177,7 +174,6 @@ button.primary:hover{background:#b9f0b3}
     </div>
   </div>
 </div>
-
 <!-- 04 -->
 <div class="section" style="--sec:var(--green)">
   <div class="sec-head"><span class="sec-num">04</span><h2>Маршрутизация в Redirect DNS</h2></div>
@@ -190,7 +186,6 @@ button.primary:hover{background:#b9f0b3}
   <div class="field-meta">база: <b id="appsBase">13</b> · своих: <b id="appsCustom">0</b></div>
   <div class="desc" id="appsDesc">Android-приложения, чьи DNS-запросы пойдут через Redirect. База включает AI-пакеты и Google (для Gemini). Весь трафик перечисленных приложений идёт в Redirect-DNS.</div>
 </div>
-
 <!-- 05 -->
 <div class="section" style="--sec:var(--red)">
   <div class="sec-head"><span class="sec-num">05</span><h2>Исключения</h2></div>
@@ -208,11 +203,9 @@ button.primary:hover{background:#b9f0b3}
     <div class="desc">Приложения, полностью минующие TUN (<code>inbounds.exclude_package</code>). Банковские и т.п.</div>
   </div>
 </div>
-
 <button class="primary" id="generateButton">Скачать конфигурацию (.json)</button>
 <div id="status" class="status">Готово к генерации.</div>
 </div>
-
 <script>
 const PLATFORMS={
   android:{
@@ -232,7 +225,6 @@ const PLATFORMS={
     appsDesc:"Имена процессов Linux (например claude, firefox). Базовый список пуст — впиши свои."
   }
 };
-
 const REDIRECT_DNS=[
 {name:"Astracat (DoH)",host:"dns.astracat.ru",type:"https",tag:"astracat-doh"},
 {name:"Astracat (DoT)",host:"dns.astracat.ru",type:"tls",tag:"astracat-dot"},
@@ -248,7 +240,6 @@ const REDIRECT_DNS=[
 {name:"Xbox DNS (DoH)",host:"xbox-dns.ru",type:"https",tag:"xbox-doh"},
 {name:"Xbox DNS (DoT)",host:"xbox-dns.ru",type:"tls",tag:"xbox-dot"}
 ];
-
 const DIRECT_DNS=[
 {name:"AliDNS (DoH)",host:"dns.alidns.com",type:"https",tag:"alidns-doh"},
 {name:"AliDNS (DoT)",host:"dns.alidns.com",type:"tls",tag:"alidns-dot"},
@@ -293,7 +284,6 @@ const DIRECT_DNS=[
 {name:"Tiarap App (DoH)",host:"doh.tiar.app",type:"https",tag:"tiarapp-doh"},
 {name:"Tiarap Org (DoH)",host:"doh.tiarap.org",type:"https",tag:"tiarap-doh"}
 ];
-
 const $=id=>document.getElementById(id);
 const getPlatform=()=>document.querySelector('input[name="platform"]:checked').value;
 const getMode=()=>document.querySelector('input[name="profileMode"]:checked').value;
@@ -301,11 +291,9 @@ const getSyntax=()=>document.querySelector('input[name="syntaxVersion"]:checked'
 const parseInput=id=>{const v=$(id).value.trim();return v?[...new Set(v.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean))]:[];};
 const pad=n=>String(n).padStart(2,"0");
 const fileName=k=>{const n=new Date();return `${k}_${n.getFullYear()}_${pad(n.getMonth()+1)}_${pad(n.getDate())}_${pad(n.getHours())}_${pad(n.getMinutes())}.json`;};
-
 function buildServerObj(d,bs){const o={type:d.type,tag:d.tag,server:d.host,domain_resolver:bs};if(d.port)o.server_port=d.port;if(d.path)o.path=d.path;return o;}
 function fillSelect(id,list){const s=$(id);list.forEach(d=>{const o=document.createElement("option");o.value=JSON.stringify(d);o.textContent=d.name;s.appendChild(o);});}
 function handleCustom(s,b){$(s).addEventListener("change",function(){$(b).style.display=this.value==="custom"?"block":"none";});}
-
 function getBootstrap(){
   const v=$("bootstrapSelect").value;
   if(v==="custom"){const ip=$("bootstrapCustomIp").value.trim();if(!ip)throw new Error("Введите IP Bootstrap DNS.");return ip;}
@@ -321,7 +309,6 @@ function parseCustomDns(inputId,tag){
   return{host,type,port,path,tag};
 }
 function parseDns(selId,inputId,tag){const v=$(selId).value;if(v==="custom")return parseCustomDns(inputId,tag);return JSON.parse(v);}
-
 function applyPlatform(){
   const pf=PLATFORMS[getPlatform()];
   $("appsLabel").textContent=pf.appsLabel;
@@ -329,7 +316,6 @@ function applyPlatform(){
   $("excludeAppsBlock").style.display=pf.tunExclude?"block":"none";
   updateLive();
 }
-function selTag(selId){const v=$(selId).value;return v==="custom"?"custom":JSON.parse(v).tag;}
 function updateLive(){
   const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
   const custom=parseInput("customApps").length;
@@ -337,7 +323,6 @@ function updateLive(){
   $("appsCustom").textContent=custom;
   $("domainsCount").textContent=parseInput("customDomains").length;
 }
-
 function generateConfig(){
   const status=$("status");
   try{
@@ -350,19 +335,15 @@ function generateConfig(){
     const userUrl=$("remoteUrl").value.trim();
     const remoteUrl=userUrl||"https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
     const updateInterval=$("updateInterval").value;
-
     const fn=remoteUrl.split("/").pop().split("?")[0],bn=fn.replace(".srs","");
     const rsTag=bn?`${bn}-ruleset`:"domains-ruleset";
-
     const customDomains=parseInput("customDomains");
     const allApps=[...new Set([...pf.defaultApps,...parseInput("customApps")])];
     const exclDomains=parseInput("excludeDomains");
-
     // исключения приложений + пресет WhatsApp (только Android)
     let exclApps=parseInput("excludeApps");
     let waExcluded=false;
     if(pf.tunExclude&&$("excludeWhatsapp").checked){exclApps=[...new Set([...exclApps,"com.whatsapp"])];waExcluded=true;}
-
     const servers=[{type:"udp",tag:"bootstrap",server:bootstrapIp}];
     let rTag,dTag;
     if(mode==="fixed"){
@@ -375,54 +356,49 @@ function generateConfig(){
       DIRECT_DNS.forEach(x=>servers.push(buildServerObj(x,"bootstrap")));
       rTag=REDIRECT_DNS[0].tag;dTag=DIRECT_DNS[0].tag;
     }
-
     const tun={type:"tun",tag:"tun-in"};
     if(pf.interfaceName)tun.interface_name=pf.interfaceName;
     tun.address=["172.19.0.1/30"];
     tun.auto_route=true;tun.strict_route=true;tun.stack="gvisor";tun.mtu=mtu;
     if(pf.tunExclude&&exclApps.length)tun[pf.tunExclude]=exclApps;
-
     const config={};
     config.log=logLevel==="off"?{disabled:true}:{level:logLevel,timestamp:true};
     config.dns={servers,rules:[],final:dTag,strategy};
     config.inbounds=[tun];
     config.outbounds=[{type:"direct",tag:"direct"}];
-
     const ruleSetEntry={type:"remote",tag:rsTag,format:"binary",url:remoteUrl,update_interval:updateInterval};
-    if(syntax==="modern")ruleSetEntry.http_client={detour:"direct"};
-    else ruleSetEntry.download_detour="direct";
-
+    // 1.14+: download_detour deprecated (removal 1.16); detour на пустой direct → fatal
+    // "detour to an empty direct outbound makes no sense". Поэтому modern — без detour:
+    // выделенный http_clients без detour dial'ит direct сам (docs: rule-set/index.md, shared/http-client.md).
+    if(syntax==="legacy")ruleSetEntry.download_detour="direct";
     // port=53 hijack убран: sniff+protocol=dns покрывает UDP-DNS, а правило по порту ловило QUIC-мусор (bad question name)
-    config.route={
+    const route={
       rule_set:[ruleSetEntry],
       rules:[{action:"sniff"},{protocol:"dns",action:"hijack-dns"},{port:853,action:"hijack-dns"},{ip_is_private:true,outbound:"direct"}],
       default_domain_resolver:"bootstrap",auto_detect_interface:true,final:"direct"
     };
-
+    if(syntax==="modern"){config.http_clients=[{tag:"rs-http"}];route.default_http_client="rs-http";}
+    config.route=route;
     if(exclDomains.length)config.dns.rules.push({domain_suffix:exclDomains,server:dTag});
     if(allApps.length){const r={server:rTag};r[pf.appField]=allApps;config.dns.rules.push(r);}
     if(customDomains.length)config.dns.rules.push({domain_suffix:customDomains,server:rTag});
     config.dns.rules.push({rule_set:rsTag,server:rTag});
-
     const fname=fileName(pfKey);
     const json=JSON.stringify(config,null,2);
     const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
     a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-
     status.className="status ok";
     status.textContent=
 `✓ Конфигурация создана: ${fname}
-
 Платформа: ${pfKey} (${pf.appField})
 Режим: ${mode==="fixed"?"Фиксированный":"Fallback"}
-Синтаксис: ${syntax==="modern"?"modern (≥1.14)":"legacy (1.11–1.13)"}
+Синтаксис: ${syntax==="modern"?"modern (≥1.14, http_clients)":"legacy (1.11–1.13, download_detour)"}
 Bootstrap: ${bootstrapIp} | Strategy: ${strategy} | MTU: ${mtu}
 Логи: ${logLevel==="off"?"disabled:true":logLevel}
 Redirect → ${rTag} | Direct → ${dTag}
 Rule-Set → ${rsTag} ${userUrl?"(свой URL)":"(по умолчанию)"}
 DNS-серверов: ${servers.length-1}
-
 Приложений в Redirect: ${allApps.length}
 Исключено из TUN: ${exclApps.length}${waExcluded?" (WhatsApp включён)":""}
 Исключено доменов (→ Direct): ${exclDomains.length}`;
@@ -431,7 +407,6 @@ DNS-серверов: ${servers.length-1}
     status.textContent="✗ Ошибка генерации:\n\n"+e.message;
   }
 }
-
 window.addEventListener("DOMContentLoaded",()=>{
   fillSelect("redirectSelect",REDIRECT_DNS);
   fillSelect("directSelect",DIRECT_DNS);
