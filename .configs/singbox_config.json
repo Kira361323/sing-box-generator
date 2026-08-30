@@ -13,13 +13,13 @@
       {
         "type": "https",
         "tag": "xbox-doh",
-        "server": "https://xbox-dns.ru/dns-query",
+        "server": "xbox-dns.ru",
         "domain_resolver": "bootstrap"
       },
       {
         "type": "https",
         "tag": "dnsforge-doh",
-        "server": "https://dnsforge.de/dns-query",
+        "server": "dnsforge.de",
         "domain_resolver": "bootstrap"
       }
     ],
@@ -47,9 +47,13 @@
       }
     ],
     "final": "dnsforge-doh",
-    "strategy": "prefer_ipv4",
-    "independent_cache": true
+    "strategy": "prefer_ipv4"
   },
+  "http_clients": [
+    {
+      "tag": "rs-http"
+    }
+  ],
   "inbounds": [
     {
       "type": "tun",
@@ -77,8 +81,7 @@
         "tag": "domains-ruleset",
         "format": "binary",
         "url": "https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs",
-        "update_interval": "12h",
-        "download_detour": "direct"
+        "update_interval": "12h"
       }
     ],
     "rules": [
@@ -94,6 +97,7 @@
         "outbound": "direct"
       }
     ],
+    "default_http_client": "rs-http",
     "default_domain_resolver": "bootstrap",
     "auto_detect_interface": true,
     "final": "direct"
