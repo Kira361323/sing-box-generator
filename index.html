@@ -84,7 +84,7 @@ button.primary:hover{background:#b9f0b3}
     <input type="radio" name="syntaxVersion" id="syn-modern" value="modern" checked><label for="syn-modern">Modern (≥ 1.14)</label>
     <input type="radio" name="syntaxVersion" id="syn-legacy" value="legacy"><label for="syn-legacy">Legacy (1.11 – 1.13)</label>
   </div>
-  <div class="desc"><b>Modern (≥ 1.14)</b> — rule-set скачивается через выделенный <code>http_clients</code> + <code>route.default_http_client</code>: dial direct, без deprecation-warning и без detour-ошибок.<br><b>Legacy (1.11–1.13)</b> — rule-set через <code>download_detour</code> (поле удалено из sing-box в 1.16).</div>
+  <div class="desc"><b>Modern (≥ 1.14)</b> — rule-set скачивается через выделенный <code>http_clients</code> + <code>route.default_http_client</code> (HTTP-клиент без detour dial'ит direct): без deprecation-warning и без detour-ошибок.<br><b>Legacy (1.11–1.13)</b> — rule-set через <code>download_detour: "direct"</code> (поле deprecated с 1.14, removal в 1.16).</div>
 </div>
 <!-- 02 -->
 <div class="section" style="--sec:var(--accent)">
@@ -150,6 +150,14 @@ button.primary:hover{background:#b9f0b3}
         <option value="1500">1500</option>
       </select>
       <div class="desc">Если на WiFi приложения резолвятся, но данные не проходят — снизь до 1280/1360 (проверка MTU-гипотезы).</div>
+      <label for="stackSelect">TUN stack</label>
+      <select id="stackSelect">
+        <option value="auto" selected>Auto (поле не указывается)</option>
+        <option value="system">system</option>
+        <option value="gvisor">gvisor</option>
+        <option value="mixed">mixed</option>
+      </select>
+      <div class="desc"><b>Auto</b> — sing-box сам выберет: <code>mixed</code> при сборке с тегом <code>with_gvisor</code>, иначе <code>system</code>. <b>gvisor/mixed</b> — только для сборок с <code>with_gvisor</code>, иначе ошибка старта «gVisor is not included in this build» (Termux и модифицированные пакеты меняют список тегов).</div>
     </div>
   </div>
   <label for="remoteUrl">Remote Rule-Set URL</label>
@@ -316,6 +324,7 @@ function applyPlatform(){
   $("excludeAppsBlock").style.display=pf.tunExclude?"block":"none";
   updateLive();
 }
+function selTag(selId){const v=$(selId).value;return v==="custom"?"custom":JSON.parse(v).tag;}
 function updateLive(){
   const pfKey=getPlatform(),pf=PLATFORMS[pfKey];
   const custom=parseInput("customApps").length;
@@ -331,6 +340,7 @@ function generateConfig(){
     const logLevel=$("logLevelSelect").value;
     const strategy=$("strategySelect").value;
     const mtu=parseInt($("mtuSelect").value,10);
+    const stack=$("stackSelect").value;
     const bootstrapIp=getBootstrap();
     const userUrl=$("remoteUrl").value.trim();
     const remoteUrl=userUrl||"https://github.com/Kira361323/Dns-rules/releases/latest/download/domains.srs";
@@ -359,7 +369,10 @@ function generateConfig(){
     const tun={type:"tun",tag:"tun-in"};
     if(pf.interfaceName)tun.interface_name=pf.interfaceName;
     tun.address=["172.19.0.1/30"];
-    tun.auto_route=true;tun.strict_route=true;tun.stack="gvisor";tun.mtu=mtu;
+    tun.auto_route=true;tun.strict_route=true;tun.mtu=mtu;
+    // stack auto = поле не указываем: sing-box выберет mixed при with_gvisor, иначе system.
+    // Явный gvisor/mixed на сборке без with_gvisor → fatal "gVisor is not included in this build".
+    if(stack!=="auto")tun.stack=stack;
     if(pf.tunExclude&&exclApps.length)tun[pf.tunExclude]=exclApps;
     const config={};
     config.log=logLevel==="off"?{disabled:true}:{level:logLevel,timestamp:true};
@@ -367,7 +380,8 @@ function generateConfig(){
     config.inbounds=[tun];
     config.outbounds=[{type:"direct",tag:"direct"}];
     const ruleSetEntry={type:"remote",tag:rsTag,format:"binary",url:remoteUrl,update_interval:updateInterval};
-    // 1.14+: download_detour deprecated (removal 1.16); detour на пустой direct → fatal
+    // Legacy 1.11–1.13: download_detour поддерживается, guard'ов нет.
+    // Modern ≥1.14: download_detour deprecated (removal 1.16); detour на пустой direct → fatal
     // "detour to an empty direct outbound makes no sense". Поэтому modern — без detour:
     // выделенный http_clients без detour dial'ит direct сам (docs: rule-set/index.md, shared/http-client.md).
     if(syntax==="legacy")ruleSetEntry.download_detour="direct";
@@ -394,10 +408,10 @@ function generateConfig(){
 Платформа: ${pfKey} (${pf.appField})
 Режим: ${mode==="fixed"?"Фиксированный":"Fallback"}
 Синтаксис: ${syntax==="modern"?"modern (≥1.14, http_clients)":"legacy (1.11–1.13, download_detour)"}
-Bootstrap: ${bootstrapIp} | Strategy: ${strategy} | MTU: ${mtu}
+Bootstrap: ${bootstrapIp} | Strategy: ${strategy} | MTU: ${mtu} | Stack: ${stack==="auto"?"auto":stack}
 Логи: ${logLevel==="off"?"disabled:true":logLevel}
 Redirect → ${rTag} | Direct → ${dTag}
-Rule-Set → ${rsTag} ${userUrl?"(свой URL)":"(по умолчанию)"}
+Rule-Set → ${rsTag} ${syntax==="modern"?"(http_clients: rs-http)":"(download_detour: direct)"} ${userUrl?"(свой URL)":"(по умолчанию)"}
 DNS-серверов: ${servers.length-1}
 Приложений в Redirect: ${allApps.length}
 Исключено из TUN: ${exclApps.length}${waExcluded?" (WhatsApp включён)":""}
